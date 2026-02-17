@@ -293,12 +293,17 @@ pub fn check_task(name: &str, task_id: &str, check: bool) -> Result<(), String> 
 }
 
 pub fn status(name: Option<&str>) -> Result<(), String> {
+    use super::summary::load_spec_summary;
+
     match name {
         Some(name) => {
             let path = find_spec(name)?;
-            let content =
-                fs::read_to_string(&path).map_err(|e| format!("Failed to read spec: {e}"))?;
-            print_status(name, &content);
+            let summary =
+                load_spec_summary(&path).ok_or_else(|| format!("Failed to load spec '{name}'"))?;
+            println!(
+                "{}: {}/{} tasks complete",
+                summary.name, summary.checked, summary.total
+            );
         }
         None => {
             let mut files = collect_spec_files()?;
@@ -311,33 +316,14 @@ pub fn status(name: Option<&str>) -> Result<(), String> {
             files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
 
             for path in &files {
-                let filename = path
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_string();
-                let spec_name = extract_spec_name(&filename).unwrap_or(&filename);
-                let content = fs::read_to_string(path).unwrap_or_default();
-                print_status(spec_name, &content);
+                if let Some(summary) = load_spec_summary(path) {
+                    println!(
+                        "{}: {}/{} tasks complete",
+                        summary.name, summary.checked, summary.total
+                    );
+                }
             }
         }
     }
     Ok(())
-}
-
-fn print_status(name: &str, content: &str) {
-    let mut total = 0u32;
-    let mut checked = 0u32;
-
-    for line in content.lines() {
-        let trimmed = line.trim();
-        if trimmed.starts_with("- [ ] ") {
-            total += 1;
-        } else if trimmed.starts_with("- [x] ") {
-            total += 1;
-            checked += 1;
-        }
-    }
-
-    println!("{name}: {checked}/{total} tasks complete");
 }

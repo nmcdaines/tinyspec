@@ -1,7 +1,9 @@
 mod commands;
 mod config;
+pub(crate) mod dashboard;
 mod format;
 mod init;
+pub(crate) mod summary;
 
 // Re-export public API (keeps `spec::function_name` working from main.rs)
 pub use commands::{check_task, delete, edit, list, new_spec, status, view};
