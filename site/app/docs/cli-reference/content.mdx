@@ -1,0 +1,160 @@
+# CLI Reference
+
+## tinyspec init
+
+Set up Claude Code skills and shell completions in the current repository.
+
+```
+tinyspec init [--force]
+```
+
+Creates skill files under `.claude/skills/` for the refine, work, task, and oneshot skills. Prints shell-specific instructions for enabling tab completion.
+
+| Flag | Description |
+| --- | --- |
+| `--force`, `-f` | Overwrite existing skill files with the latest versions |
+
+## tinyspec new
+
+Create a new spec.
+
+```
+tinyspec new <spec-name> [--template <name>]
+```
+
+Creates a timestamped Markdown file in `.specs/`. The spec name must be kebab-case (lowercase letters, digits, and single hyphens).
+
+Use slash notation to create specs inside a group:
+
+```
+tinyspec new v1/my-feature
+```
+
+| Flag | Description |
+| --- | --- |
+| `--template`, `-t` | Use a named template instead of the default skeleton |
+
+If a template named `default` exists, it is applied automatically when no `--template` flag is given.
+
+## tinyspec list
+
+List all specs.
+
+```
+tinyspec list
+```
+
+Shows each spec's name and title, organized by group. Specs are sorted by filename (which provides natural date ordering).
+
+## tinyspec view
+
+Print the full content of a spec.
+
+```
+tinyspec view <spec-name>
+```
+
+If the spec lists applications in its front matter, their names are resolved to folder paths via the config before printing.
+
+## tinyspec edit
+
+Open a spec in your editor.
+
+```
+tinyspec edit <spec-name>
+```
+
+Uses `$EDITOR` (falls back to `vi`). Remember to run `tinyspec format` after editing, since the editor does not auto-format.
+
+## tinyspec delete
+
+Delete a spec.
+
+```
+tinyspec delete <spec-name>
+```
+
+Prompts for confirmation before removing the file.
+
+## tinyspec check
+
+Mark a task as complete.
+
+```
+tinyspec check <spec-name> <task-id>
+```
+
+Changes `- [ ]` to `- [x]` for the given task ID. Auto-formats the file afterward.
+
+```
+tinyspec check my-feature A.1
+```
+
+## tinyspec uncheck
+
+Mark a task as incomplete.
+
+```
+tinyspec uncheck <spec-name> <task-id>
+```
+
+Changes `- [x]` back to `- [ ]` for the given task ID. Auto-formats the file afterward.
+
+## tinyspec format
+
+Normalize Markdown formatting in a spec.
+
+```
+tinyspec format <spec-name>
+tinyspec format --all
+```
+
+Formats the Markdown body while preserving YAML front matter verbatim. The operation is idempotent. Use `--all` to format every spec in `.specs/`.
+
+Commands like `new`, `check`, and `uncheck` auto-format, so you only need to run this manually after editing a spec file directly.
+
+## tinyspec status
+
+Show completion progress.
+
+```
+tinyspec status [<spec-name>]
+```
+
+Without a spec name, shows status for all specs. Output format:
+
+```
+my-feature: 5/12 tasks complete
+```
+
+## tinyspec templates
+
+List available templates.
+
+```
+tinyspec templates
+```
+
+Shows template names and their source (repo-level or user-level).
+
+## tinyspec config
+
+Manage repository path mappings for multi-repo specs.
+
+```
+tinyspec config set <repo-name> <path>
+tinyspec config list
+tinyspec config remove <repo-name>
+```
+
+Config is stored at `~/.tinyspec/config.yaml`. These mappings are used by `tinyspec view` to resolve application names to folder paths.
+
+## tinyspec dashboard
+
+Launch the interactive TUI dashboard.
+
+```
+tinyspec dashboard
+```
+
+Shows all specs with progress bars and status. See the [Dashboard](/docs/dashboard) page for details.
