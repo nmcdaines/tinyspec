@@ -48,11 +48,11 @@ repositories:
   - [x] B.2: Load config and resolve application names to folder paths
   - [x] B.3: Perform find-and-replace of application names with resolved folder paths in view output
   - [x] B.4: Error if config file is missing or application names are unmapped
-- [ ] C: Update slash command prompts
-  - [ ] C.1: Update `spec-work` prompt to read specs via `tinyspec view <spec-name>`
-  - [ ] C.2: Update `spec-task` prompt to read specs via `tinyspec view <spec-name>`
-  - [ ] C.3: Add instruction: when multiple applications are specified, prompt the user about which to focus on
-  - [ ] C.4: Add instruction: when config is missing or repos unresolved, present a clear error to the user
+- [x] C: Update slash command prompts
+  - [x] C.1: Update `spec-work` prompt to read specs via `tinyspec view <spec-name>`
+  - [x] C.2: Update `spec-task` prompt to read specs via `tinyspec view <spec-name>`
+  - [x] C.3: Add instruction: when multiple applications are specified, prompt the user about which to focus on
+  - [x] C.4: Add instruction: when config is missing or repos unresolved, present a clear error to the user
 
 # Test Plan
 

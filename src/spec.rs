@@ -675,7 +675,9 @@ If no matching spec is found, list available specs with `tinyspec list` and ask 
 
 Your goal is to work through the spec's Implementation Plan:
 
-1. Read the full spec to understand the context (Background, Proposal).
+1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal). This command resolves application references to folder paths automatically.
+   - If `tinyspec view` fails with a config error, inform the user that they need to configure repository paths with `tinyspec config set <repo-name> <path>` and stop.
+   - If the spec references multiple applications, ask the user which repositories to focus on before proceeding.
 2. Run `tinyspec status <spec-name>` to see current progress.
 3. Find the next unchecked task in the Implementation Plan (top-level tasks in order: A, B, C, ...).
 4. For each top-level task group:
@@ -697,7 +699,9 @@ If no matching spec is found, list available specs with `tinyspec list` and ask 
 
 Your goal is to complete a specific task:
 
-1. Read the full spec to understand the context (Background, Proposal, Implementation Plan).
+1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal, Implementation Plan). This command resolves application references to folder paths automatically.
+   - If `tinyspec view` fails with a config error, inform the user that they need to configure repository paths with `tinyspec config set <repo-name> <path>` and stop.
+   - If the spec references multiple applications, ask the user which repositories to focus on before proceeding.
 2. Locate the specified task in the Implementation Plan.
 3. Implement just that task.
 4. Mark it complete with `tinyspec check <spec-name> <task-id>`.
