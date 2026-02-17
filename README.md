@@ -101,6 +101,22 @@ tinyspec status my-feature
 tinyspec status  # all specs
 ```
 
+### 6. Dashboard
+
+Launch a real-time TUI dashboard to monitor all specs at a glance:
+
+```sh
+tinyspec dashboard
+```
+
+The dashboard watches `.specs/` for changes and auto-refreshes. Specs are sorted by status (in-progress, pending, completed) and grouped by feature group with aggregate completion percentages.
+
+**Controls:**
+- `↑`/`↓` or `j`/`k` — navigate specs
+- `Enter` — view a spec's Implementation Plan as a collapsible task tree
+- `Esc` — return to the list
+- `q` — quit
+
 ## Configure
 
 When a spec references multiple repositories, tinyspec resolves application names to folder paths using `~/.tinyspec/config.yaml`.
