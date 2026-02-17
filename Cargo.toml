@@ -1,6 +1,6 @@
 [package]
 name = "tinyspec"
-version = "0.0.6"
+version = "0.0.7"
 edition = "2024"
 repository = "https://github.com/nmcdaines/tinyspec"
 description = "A tiny framework for writing specs for use in language models."

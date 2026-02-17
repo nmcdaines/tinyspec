@@ -21,6 +21,6 @@ Ensure that the timestamp prefix is unique when using `tinyspec new`. After gene
   - [x] B.1: Test that the no-conflict case uses the current timestamp
   - [x] B.2: Test that a conflicting prefix gets incremented by 1 minute
   - [x] B.3: Test rollover from minute 59 to the next hour
-- [ ] 🧪 Run `cargo test` upon completion
+- [x] 🧪: Run `cargo test` upon completion
 
 # Test Plan
