@@ -15,7 +15,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "tinyspec — Spec-driven development with Claude Code",
   description:
-    "A tiny framework for writing structured specifications that integrate with Claude Code. Turn ideas into tracked implementation plans.",
+    "A tiny framework for writing structured specifications that turn ideas into tracked implementation plans — powered by AI.",
+  openGraph: {
+    title: "tinyspec — Spec-driven development with Claude Code",
+    description:
+      "A tiny framework for writing structured specifications that turn ideas into tracked implementation plans — powered by AI.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "tinyspec — Spec-driven development with Claude Code",
+    description:
+      "A tiny framework for writing structured specifications that turn ideas into tracked implementation plans — powered by AI.",
+  },
 };
 
 export default function RootLayout({
