@@ -18,12 +18,13 @@ pub fn new_spec(input: &str) -> Result<(), String> {
     let existing = collect_spec_files().unwrap_or_default();
     for path in &existing {
         if let Some(filename) = path.file_name().and_then(|f| f.to_str())
-            && extract_spec_name(filename) == Some(name) {
-                return Err(format!(
-                    "A spec named '{name}' already exists: {}",
-                    path.display()
-                ));
-            }
+            && extract_spec_name(filename) == Some(name)
+        {
+            return Err(format!(
+                "A spec named '{name}' already exists: {}",
+                path.display()
+            ));
+        }
     }
 
     let dir = match group {
@@ -87,36 +88,64 @@ applications:
 }
 
 pub fn list() -> Result<(), String> {
-    let dir = specs_dir();
-    if !dir.exists() {
-        println!("No specs found.");
-        return Ok(());
-    }
+    let mut files = collect_spec_files()?;
 
-    let mut entries: Vec<_> = fs::read_dir(&dir)
-        .map_err(|e| format!("Failed to read .specs/ directory: {e}"))?
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_name().to_string_lossy().ends_with(".md"))
-        .collect();
-
-    if entries.is_empty() {
+    if files.is_empty() {
         println!("No specs found.");
         return Ok(());
     }
 
     // Sort by filename (natural date ordering due to timestamp prefix)
-    entries.sort_by_key(|e| e.file_name());
+    files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
 
-    for entry in entries {
-        let filename = entry.file_name().to_string_lossy().to_string();
+    // Group by parent directory
+    let specs_root = specs_dir();
+    let mut ungrouped = Vec::new();
+    let mut groups: std::collections::BTreeMap<String, Vec<&std::path::PathBuf>> =
+        std::collections::BTreeMap::new();
+
+    for path in &files {
+        let parent = path.parent().unwrap_or(&specs_root);
+        if parent == specs_root {
+            ungrouped.push(path);
+        } else {
+            let group_name = parent
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
+            groups.entry(group_name).or_default().push(path);
+        }
+    }
+
+    let print_spec = |path: &std::path::Path| {
+        let filename = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
         let spec_name = extract_spec_name(&filename).unwrap_or(&filename);
-
-        let content = fs::read_to_string(entry.path()).unwrap_or_default();
+        let content = fs::read_to_string(path).unwrap_or_default();
         let title = parse_front_matter(&content)
             .and_then(|fm| fm.title)
             .unwrap_or_else(|| "(no title)".into());
-
         println!("{spec_name:30} {title}");
+    };
+
+    // Print ungrouped specs first
+    for path in &ungrouped {
+        print_spec(path);
+    }
+
+    // Print each group with a header
+    for (group_name, paths) in &groups {
+        if !ungrouped.is_empty() || groups.len() > 1 {
+            println!();
+        }
+        println!("{group_name}/");
+        for path in paths {
+            print_spec(path);
+        }
     }
 
     Ok(())
@@ -272,24 +301,23 @@ pub fn status(name: Option<&str>) -> Result<(), String> {
             print_status(name, &content);
         }
         None => {
-            let dir = specs_dir();
-            if !dir.exists() {
+            let mut files = collect_spec_files()?;
+
+            if files.is_empty() {
                 println!("No specs found.");
                 return Ok(());
             }
 
-            let mut entries: Vec<_> = fs::read_dir(&dir)
-                .map_err(|e| format!("Failed to read .specs/ directory: {e}"))?
-                .filter_map(|e| e.ok())
-                .filter(|e| e.file_name().to_string_lossy().ends_with(".md"))
-                .collect();
+            files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
 
-            entries.sort_by_key(|e| e.file_name());
-
-            for entry in entries {
-                let filename = entry.file_name().to_string_lossy().to_string();
+            for path in &files {
+                let filename = path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string();
                 let spec_name = extract_spec_name(&filename).unwrap_or(&filename);
-                let content = fs::read_to_string(entry.path()).unwrap_or_default();
+                let content = fs::read_to_string(path).unwrap_or_default();
                 print_status(spec_name, &content);
             }
         }

@@ -4,7 +4,7 @@ use std::path::Path;
 use pulldown_cmark::{Options, Parser};
 use pulldown_cmark_to_cmark::cmark_with_options;
 
-use super::{find_spec, specs_dir};
+use super::{collect_spec_files, find_spec, specs_dir};
 
 /// Split YAML front matter from the Markdown body.
 /// Returns (front_matter_block_including_delimiters, body).
@@ -82,31 +82,26 @@ pub fn format_spec(name: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Format all spec files in the `.specs/` directory.
+/// Format all spec files in the `.specs/` directory and its subdirectories.
 pub fn format_all_specs() -> Result<(), String> {
-    let dir = specs_dir();
-    if !dir.exists() {
+    let mut files = collect_spec_files()?;
+
+    if files.is_empty() {
         println!("No specs found.");
         return Ok(());
     }
 
-    let entries: Vec<_> = fs::read_dir(&dir)
-        .map_err(|e| format!("Failed to read .specs/ directory: {e}"))?
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_name().to_string_lossy().ends_with(".md"))
-        .collect();
+    files.sort();
+    let specs_root = specs_dir();
 
-    if entries.is_empty() {
-        println!("No specs found.");
-        return Ok(());
-    }
-
-    for entry in &entries {
-        let content =
-            fs::read_to_string(entry.path()).map_err(|e| format!("Failed to read spec: {e}"))?;
+    for path in &files {
+        let content = fs::read_to_string(path).map_err(|e| format!("Failed to read spec: {e}"))?;
         let formatted = format_markdown(&content)?;
-        fs::write(entry.path(), &formatted).map_err(|e| format!("Failed to write spec: {e}"))?;
-        println!("Formatted {}", entry.file_name().to_string_lossy());
+        fs::write(path, &formatted).map_err(|e| format!("Failed to write spec: {e}"))?;
+
+        // Show path relative to .specs/ for grouped specs
+        let display = path.strip_prefix(&specs_root).unwrap_or(path).display();
+        println!("Formatted {display}");
     }
 
     Ok(())
