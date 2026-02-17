@@ -46,10 +46,22 @@ pub struct SpecSummary {
     pub name: String,
     pub title: String,
     pub group: Option<String>,
+    pub timestamp: String, // "YYYY-MM-DD HH:MM"
     pub total: u32,
     pub checked: u32,
     pub status: SpecStatus,
     pub tasks: Vec<TaskNode>,
+}
+
+/// Extract a human-friendly timestamp from a spec filename.
+/// `"2026-02-17-21-27-dashboard.md"` → `"2026-02-17 21:27"`
+fn extract_timestamp(filename: &str) -> String {
+    if filename.len() >= 16 {
+        let raw = &filename[..16];
+        format!("{} {}:{}", &raw[..10], &raw[11..13], &raw[14..16])
+    } else {
+        String::new()
+    }
 }
 
 /// Parse the Implementation Plan section into a task tree.
@@ -137,6 +149,7 @@ fn count_tasks(tasks: &[TaskNode]) -> (u32, u32) {
 pub fn load_spec_summary(path: &Path) -> Option<SpecSummary> {
     let filename = path.file_name()?.to_str()?;
     let name = extract_spec_name(filename)?.to_string();
+    let timestamp = extract_timestamp(filename);
     let content = fs::read_to_string(path).ok()?;
 
     let title = parse_front_matter(&content)
@@ -173,6 +186,7 @@ pub fn load_spec_summary(path: &Path) -> Option<SpecSummary> {
         name,
         title,
         group,
+        timestamp,
         total,
         checked,
         status,
@@ -180,8 +194,8 @@ pub fn load_spec_summary(path: &Path) -> Option<SpecSummary> {
     })
 }
 
-/// Load all specs and return them sorted by status (InProgress > Pending > Completed),
-/// then by group name, then by spec name.
+/// Load all specs and return them sorted by completion (incomplete first, then completed),
+/// then by group name, then by timestamp within each group.
 pub fn load_all_summaries() -> Result<Vec<SpecSummary>, String> {
     let files = collect_spec_files()?;
     let mut summaries: Vec<SpecSummary> = files
@@ -190,10 +204,12 @@ pub fn load_all_summaries() -> Result<Vec<SpecSummary>, String> {
         .collect();
 
     summaries.sort_by(|a, b| {
-        a.status
-            .cmp(&b.status)
+        let a_done = a.status == SpecStatus::Completed;
+        let b_done = b.status == SpecStatus::Completed;
+        a_done
+            .cmp(&b_done) // incomplete (false) before completed (true)
             .then_with(|| a.group.cmp(&b.group))
-            .then_with(|| a.name.cmp(&b.name))
+            .then_with(|| a.timestamp.cmp(&b.timestamp))
     });
 
     Ok(summaries)
@@ -268,5 +284,18 @@ Some background.
     fn status_sort_order() {
         assert!(SpecStatus::InProgress < SpecStatus::Pending);
         assert!(SpecStatus::Pending < SpecStatus::Completed);
+    }
+
+    #[test]
+    fn extract_timestamp_from_filename() {
+        assert_eq!(
+            extract_timestamp("2026-02-17-21-27-dashboard.md"),
+            "2026-02-17 21:27"
+        );
+        assert_eq!(
+            extract_timestamp("2025-01-05-09-00-hello-world.md"),
+            "2025-01-05 09:00"
+        );
+        assert_eq!(extract_timestamp("short.md"), "");
     }
 }

@@ -21,12 +21,14 @@ use super::summary::{SpecStatus, SpecSummary, load_all_summaries};
 
 #[derive(Clone)]
 enum DisplayItem {
+    SectionHeader(String),
     GroupHeader {
         name: String,
         checked: u32,
         total: u32,
     },
     Spec(usize), // index into App::specs
+    Separator,
 }
 
 // ---------------------------------------------------------------------------
@@ -90,36 +92,54 @@ impl App {
         self.display_items.clear();
         self.selectable.clear();
 
-        // Group specs: ungrouped first, then by group name.
-        // Within each status tier, specs are already sorted by group then name.
+        let has_incomplete = self.specs.iter().any(|s| s.status != SpecStatus::Completed);
+        let has_completed = self.specs.iter().any(|s| s.status == SpecStatus::Completed);
+
+        // "In Progress" section — all non-completed specs
+        if has_incomplete {
+            self.display_items
+                .push(DisplayItem::SectionHeader("In Progress".into()));
+            self.emit_section(|s| s.status != SpecStatus::Completed);
+        }
+
+        // Gap between sections
+        if has_incomplete && has_completed {
+            self.display_items.push(DisplayItem::Separator);
+        }
+
+        // "Completed" section
+        if has_completed {
+            self.display_items
+                .push(DisplayItem::SectionHeader("Completed".into()));
+            self.emit_section(|s| s.status == SpecStatus::Completed);
+        }
+    }
+
+    /// Emit group headers and spec rows for specs matching `filter`.
+    fn emit_section(&mut self, filter: impl Fn(&SpecSummary) -> bool) {
         let mut current_group: Option<&str> = None;
-        let mut current_status: Option<&SpecStatus> = None;
 
         for (idx, spec) in self.specs.iter().enumerate() {
-            let group_changed = spec.group.as_deref() != current_group;
-            let status_changed = current_status != Some(&spec.status);
+            if !filter(spec) {
+                continue;
+            }
 
-            // Emit group header when entering a new group
-            if group_changed {
+            // Emit group header on group change
+            if spec.group.as_deref() != current_group {
                 if let Some(ref g) = spec.group {
-                    // Compute aggregate for this group
                     let (gc, gt) = self
                         .specs
                         .iter()
-                        .filter(|s| s.group.as_deref() == Some(g.as_str()))
+                        .filter(|s| s.group.as_deref() == Some(g.as_str()) && filter(s))
                         .fold((0u32, 0u32), |(c, t), s| (c + s.checked, t + s.total));
                     self.display_items.push(DisplayItem::GroupHeader {
                         name: g.clone(),
                         checked: gc,
                         total: gt,
                     });
-                } else if status_changed && current_group.is_some() {
-                    // Transitioning from grouped back to ungrouped in a new status tier
-                    // (unlikely given sort order, but handle gracefully)
                 }
+                current_group = spec.group.as_deref();
             }
-            current_group = spec.group.as_deref();
-            current_status = Some(&spec.status);
 
             self.selectable.push(self.display_items.len());
             self.display_items.push(DisplayItem::Spec(idx));
@@ -136,11 +156,16 @@ impl App {
     }
 
     /// Build flat list of visible detail rows for the detail view.
+    /// Unchecked tasks first, then a separator, then checked tasks.
     fn detail_rows(&self) -> Vec<DetailRow> {
         let spec = &self.specs[self.detail.spec_index];
         let mut rows = Vec::new();
-        for (i, task) in spec.tasks.iter().enumerate() {
-            let expanded = !self.detail.collapsed.contains(&i);
+
+        let emit_task = |rows: &mut Vec<DetailRow>,
+                         i: usize,
+                         task: &super::summary::TaskNode,
+                         collapsed: &HashSet<usize>| {
+            let expanded = !collapsed.contains(&i);
             rows.push(DetailRow::TopLevel { index: i, expanded });
             if expanded {
                 for j in 0..task.children.len() {
@@ -150,7 +175,28 @@ impl App {
                     });
                 }
             }
+        };
+
+        // Unchecked tasks first
+        for (i, task) in spec.tasks.iter().enumerate() {
+            if !task.checked {
+                emit_task(&mut rows, i, task, &self.detail.collapsed);
+            }
         }
+
+        let has_unchecked = spec.tasks.iter().any(|t| !t.checked);
+        let has_checked = spec.tasks.iter().any(|t| t.checked);
+        if has_unchecked && has_checked {
+            rows.push(DetailRow::Separator);
+        }
+
+        // Checked tasks
+        for (i, task) in spec.tasks.iter().enumerate() {
+            if task.checked {
+                emit_task(&mut rows, i, task, &self.detail.collapsed);
+            }
+        }
+
         rows
     }
 }
@@ -159,6 +205,7 @@ impl App {
 enum DetailRow {
     TopLevel { index: usize, expanded: bool },
     SubTask { parent: usize, child: usize },
+    Separator,
 }
 
 // ---------------------------------------------------------------------------
@@ -384,6 +431,16 @@ fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
         .display_items
         .iter()
         .map(|item| match item {
+            DisplayItem::SectionHeader(label) => ListItem::new(Line::from(vec![
+                Span::raw("  "),
+                Span::styled(
+                    label.to_uppercase(),
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(Modifier::BOLD),
+                ),
+            ])),
+            DisplayItem::Separator => ListItem::new(Line::raw("")),
             DisplayItem::GroupHeader {
                 name,
                 checked,
@@ -430,7 +487,11 @@ fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
                     Span::raw("  "),
                     Span::styled(icon, Style::default().fg(icon_color)),
                     Span::raw(" "),
-                    Span::raw(format!("{:<28}", spec.name)),
+                    Span::styled(
+                        format!("{:<18}", spec.timestamp),
+                        Style::default().fg(Color::DarkGray),
+                    ),
+                    Span::raw(format!("{:<24}", spec.name)),
                     Span::styled("█".repeat(filled), Style::default().fg(bar_color)),
                     Span::styled("░".repeat(empty), Style::default().fg(Color::DarkGray)),
                     Span::raw(format!("  {}/{}", spec.checked, spec.total)),
@@ -459,6 +520,7 @@ fn render_detail(frame: &mut Frame, app: &mut App, area: Rect) {
     let items: Vec<ListItem> = rows
         .iter()
         .map(|row| match row {
+            DetailRow::Separator => ListItem::new(Line::raw("")),
             DetailRow::TopLevel { index, expanded } => {
                 let task = &spec.tasks[*index];
                 let arrow = if task.children.is_empty() {
