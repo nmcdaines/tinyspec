@@ -610,9 +610,9 @@ pub fn init() -> Result<(), String> {
         .map_err(|e| format!("Failed to create .claude/commands/ directory: {e}"))?;
 
     let skills: &[(&str, &str)] = &[
-        ("spec-refine.md", SPEC_REFINE_SKILL),
-        ("spec-work.md", SPEC_WORK_SKILL),
-        ("spec-task.md", SPEC_TASK_SKILL),
+        ("tinyspec:refine.md", TINYSPEC_REFINE_SKILL),
+        ("tinyspec:work.md", TINYSPEC_WORK_SKILL),
+        ("tinyspec:task.md", TINYSPEC_TASK_SKILL),
     ];
 
     for (filename, content) in skills {
@@ -648,7 +648,7 @@ pub fn init() -> Result<(), String> {
 // Claude Code skill prompts
 // ---------------------------------------------------------------------------
 
-const SPEC_REFINE_SKILL: &str = r#"IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
+const TINYSPEC_REFINE_SKILL: &str = r#"IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
 Read the tinyspec specification at `.specs/$ARGUMENTS.md` (resolve the name by matching the suffix after the timestamp prefix, e.g., `hello-world` matches `2025-02-17-09-36-hello-world.md`).
 
@@ -671,7 +671,7 @@ Use `tinyspec view <spec-name>` to read the current spec and directly edit the f
 After editing a spec file directly, run `tinyspec format <spec-name>` to normalize the Markdown formatting.
 "#;
 
-const SPEC_WORK_SKILL: &str = r#"IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
+const TINYSPEC_WORK_SKILL: &str = r#"IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
 Read the tinyspec specification at `.specs/$ARGUMENTS.md` (resolve the name by matching the suffix after the timestamp prefix).
 
@@ -694,7 +694,7 @@ Your goal is to work through the spec's Implementation Plan:
 If you encounter ambiguity or a task that requires user input, stop and ask before proceeding. Always verify your work compiles/runs before marking tasks complete.
 "#;
 
-const SPEC_TASK_SKILL: &str = r#"IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
+const TINYSPEC_TASK_SKILL: &str = r#"IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
 The arguments contain a spec name and a task ID separated by a space: `$ARGUMENTS`
 Parse the first word as the spec name and the second word as the task ID.
