@@ -30,7 +30,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function CodeBlock({ command }: { command: string }) {
+function TerminalBlock({ command }: { command: string }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg bg-code-bg px-5 py-3 font-mono text-sm">
       <div>
@@ -42,31 +42,65 @@ function CodeBlock({ command }: { command: string }) {
   );
 }
 
-const steps = [
+function ClaudeCodeBlock({ command }: { command: string }) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border">
+      <div className="flex items-center gap-2 border-b border-border bg-code-bg px-4 py-2">
+        <div className="flex gap-1.5">
+          <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+          <div className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+          <div className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+        </div>
+        <span className="ml-2 text-xs text-muted">Claude Code</span>
+      </div>
+      <div className="flex items-center justify-between gap-4 bg-[#1e1e1e] px-5 py-3 font-mono text-sm text-[#d4d4d4]">
+        <div>
+          <span className="text-[#569cd6] select-none">&gt; </span>
+          <code>{command}</code>
+        </div>
+        <CopyButton text={command} />
+      </div>
+    </div>
+  );
+}
+
+type Step = {
+  step: string;
+  title: string;
+  command: string;
+  type: "terminal" | "claude";
+};
+
+const steps: Step[] = [
   {
     step: "1",
     title: "Install tinyspec",
     command: "cargo install tinyspec",
+    type: "terminal",
   },
   {
     step: "2",
     title: "Initialize in your project",
     command: "tinyspec init",
+    type: "terminal",
   },
   {
     step: "3",
     title: "Create a new spec",
     command: "tinyspec new my-feature",
+    type: "terminal",
   },
   {
     step: "4",
     title: "Refine with Claude",
     command: "/tinyspec-refine my-feature",
+    type: "claude",
   },
   {
     step: "5",
     title: "Implement the plan",
     command: "/tinyspec-work my-feature",
+    type: "claude",
   },
 ];
 
@@ -88,11 +122,26 @@ export default function Install() {
               </div>
               <div className="flex-1">
                 <p className="mb-2 font-medium">{item.title}</p>
-                <CodeBlock command={item.command} />
+                {item.type === "claude" ? (
+                  <ClaudeCodeBlock command={item.command} />
+                ) : (
+                  <TerminalBlock command={item.command} />
+                )}
               </div>
             </div>
           ))}
         </div>
+        <p className="mt-10 text-center text-sm text-muted">
+          Need to adjust the plan? Run{" "}
+          <code className="rounded bg-code-bg px-1.5 py-0.5 font-mono text-xs">
+            /tinyspec-refine
+          </code>{" "}
+          again to iterate, then{" "}
+          <code className="rounded bg-code-bg px-1.5 py-0.5 font-mono text-xs">
+            /tinyspec-work
+          </code>{" "}
+          to continue implementing.
+        </p>
       </div>
     </section>
   );

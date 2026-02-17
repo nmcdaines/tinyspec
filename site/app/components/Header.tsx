@@ -2,9 +2,14 @@ export default function Header() {
   return (
     <header className="fixed top-0 z-10 w-full border-b border-border bg-background/80 backdrop-blur-sm">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <a href="/" className="font-mono text-lg font-bold">
-          tinyspec
-        </a>
+        <div className="flex items-center gap-3">
+          <a href="/" className="font-mono text-lg font-bold">
+            tinyspec
+          </a>
+          <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted">
+            v0.0.7
+          </span>
+        </div>
         <a
           href="https://github.com/nmcdaines/tinyspec"
           target="_blank"
