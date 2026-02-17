@@ -1,0 +1,107 @@
+# Configuration
+
+## Config file
+
+tinyspec stores global configuration at `~/.tinyspec/config.yaml`. This file is created automatically when you run `tinyspec config set`.
+
+```yaml
+repositories:
+  frontend: /workspace/frontend
+  backend: /workspace/backend
+```
+
+You can override the config location with the `TINYSPEC_HOME` environment variable.
+
+## Multi-repo support
+
+When a feature spans multiple repositories, list them in the spec's `applications` front matter:
+
+```yaml
+---
+tinySpec: v0
+title: My Feature
+applications:
+  - frontend
+  - backend
+  - auth-service
+---
+```
+
+Then configure the paths:
+
+```
+tinyspec config set frontend /workspace/frontend
+tinyspec config set backend /workspace/backend
+tinyspec config set auth-service /workspace/auth-service
+```
+
+When you run `tinyspec view`, all occurrences of each application name in the spec are replaced with its configured folder path. This means Claude Code skills receive the spec with real absolute paths, letting them navigate the correct directories.
+
+### Managing repositories
+
+```
+tinyspec config set <name> <path>     # add or update a mapping
+tinyspec config list                  # show all mappings
+tinyspec config remove <name>         # remove a mapping
+```
+
+## Templates
+
+Templates let you customize the skeleton used when creating new specs.
+
+### Template locations
+
+Templates are searched in order, with repo-level taking precedence:
+
+1. `.specs/templates/<name>.md` — repo-level
+2. `~/.config/tinyspec/templates/<name>.md` — user-level
+
+### Default template
+
+A template named `default` is automatically applied when running `tinyspec new` without a `--template` flag.
+
+### Using a template
+
+```
+tinyspec new my-feature --template my-template
+```
+
+### Template variables
+
+Templates support variable substitution with either `{`{`var`}`}` or `${var}` syntax:
+
+| Variable | Description | Example |
+| --- | --- |--- |
+| `title` | Title-cased spec name | `my-feature` becomes `My Feature` |
+| `date` | Current date | `2026-02-18` |
+
+Variables inside fenced code blocks and inline code are not substituted. Unknown variables are left as-is.
+
+### Example template
+
+```markdown
+---
+tinySpec: v0
+title: {{title}}
+applications:
+  -
+---
+
+# Background
+
+Created on ${date}.
+
+# Proposal
+
+# Implementation Plan
+
+# Test Plan
+```
+
+### Listing templates
+
+```
+tinyspec templates
+```
+
+Shows all available templates with their name and source (repo or user).

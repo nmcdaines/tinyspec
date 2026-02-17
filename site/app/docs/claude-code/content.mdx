@@ -1,0 +1,105 @@
+# Claude Code Integration
+
+tinyspec integrates with Claude Code through four skills (slash commands) that are installed by `tinyspec init`. These skills let Claude read your specs, ask clarifying questions, implement work, and track progress — all driven by the structured spec format.
+
+## Setup
+
+Run `tinyspec init` in your repository to install the skill files:
+
+```
+tinyspec init
+```
+
+This creates four files under `.claude/skills/`:
+
+- `tinyspec-refine/SKILL.md`
+- `tinyspec-work/SKILL.md`
+- `tinyspec-task/SKILL.md`
+- `tinyspec-oneshot/SKILL.md`
+
+To update skills to the latest version (after upgrading tinyspec):
+
+```
+tinyspec init --force
+```
+
+## /tinyspec-refine
+
+Collaborative spec refinement. Use this to turn a rough idea into a concrete implementation plan.
+
+```
+/tinyspec-refine my-feature
+```
+
+**What it does:**
+
+1. Reads the spec and understands the Background and Proposal
+2. Asks clarifying questions about ambiguous requirements
+3. Suggests improvements to the problem definition
+4. Scaffolds the Implementation Plan with task groups (A, B, C...) and subtasks (A.1, A.2...)
+5. Optionally scaffolds a Test Plan with Given/When/Then syntax
+6. Waits for your approval before writing changes
+
+You can run refine multiple times to iterate on the plan.
+
+## /tinyspec-work
+
+Implements the full Implementation Plan, working through task groups in order.
+
+```
+/tinyspec-work my-feature
+```
+
+**What it does:**
+
+1. Reads the spec (resolving application paths for multi-repo specs)
+2. Checks current progress with `tinyspec status`
+3. Finds the next unchecked task group
+4. Implements all subtasks within the group
+5. Marks each subtask complete with `tinyspec check`
+6. Verifies the build passes
+7. Commits with a message referencing the spec and task group
+8. Moves to the next group and repeats
+
+If the spec lists multiple applications, Claude will ask which repositories to focus on before starting.
+
+## /tinyspec-task
+
+Implements a single specific task from the plan.
+
+```
+/tinyspec-task my-feature A.1
+```
+
+**What it does:**
+
+1. Reads the spec and locates the specified task
+2. Implements the task (and any of its subtasks)
+3. Marks it complete with `tinyspec check`
+4. Verifies the work before marking complete
+
+If the task depends on uncompleted prior tasks, Claude will ask how to proceed.
+
+## /tinyspec-oneshot
+
+Two modes of operation:
+
+**Execute all pending specs:**
+
+```
+/tinyspec-oneshot
+```
+
+Finds all incomplete specs and works through them in chronological order. Operates autonomously, resolving ambiguity via codebase patterns and only asking for truly blocking decisions.
+
+**Generate and execute specs from a prompt:**
+
+```
+/tinyspec-oneshot Add dark mode support with a toggle in the header
+```
+
+Plans a set of specs from the prompt, presents them for approval, creates and populates each spec, then executes them all.
+
+## CLAUDE.md
+
+tinyspec adds a note to your project's `CLAUDE.md` reminding Claude to run `tinyspec format` after directly editing spec files. Commands like `new`, `check`, and `uncheck` auto-format, but manual edits need an explicit format step.
