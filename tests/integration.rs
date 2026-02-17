@@ -156,7 +156,17 @@ fn t4_view_existing_spec() {
     let content = sample_spec_content();
     create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &content);
 
+    // Set up config so applications can be resolved
+    let config_dir = dir.path().join(".tinyspec-config");
+    fs::create_dir_all(&config_dir).unwrap();
+    fs::write(
+        config_dir.join("config.yaml"),
+        "repositories:\n  my-app: /path/to/my-app\n",
+    )
+    .unwrap();
+
     tinyspec(&dir)
+        .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
         .args(["view", "hello-world"])
         .assert()
         .success()

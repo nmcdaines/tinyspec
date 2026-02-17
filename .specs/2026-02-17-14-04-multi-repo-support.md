@@ -43,11 +43,11 @@ repositories:
   - [x] A.3: Implement `tinyspec config set <repo-name> <path>`
   - [x] A.4: Implement `tinyspec config list`
   - [x] A.5: Implement `tinyspec config remove <repo-name>`
-- [ ] B: Application resolution in `tinyspec view`
-  - [ ] B.1: Parse `applications` array from spec frontmatter into the existing struct
-  - [ ] B.2: Load config and resolve application names to folder paths
-  - [ ] B.3: Perform find-and-replace of application names with resolved folder paths in view output
-  - [ ] B.4: Error if config file is missing or application names are unmapped
+- [x] B: Application resolution in `tinyspec view`
+  - [x] B.1: Parse `applications` array from spec frontmatter into the existing struct
+  - [x] B.2: Load config and resolve application names to folder paths
+  - [x] B.3: Perform find-and-replace of application names with resolved folder paths in view output
+  - [x] B.4: Error if config file is missing or application names are unmapped
 - [ ] C: Update slash command prompts
   - [ ] C.1: Update `spec-work` prompt to read specs via `tinyspec view <spec-name>`
   - [ ] C.2: Update `spec-task` prompt to read specs via `tinyspec view <spec-name>`

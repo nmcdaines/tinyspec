@@ -84,6 +84,8 @@ pub fn complete_spec_names(current: &std::ffi::OsStr) -> Vec<CompletionCandidate
 #[derive(Deserialize)]
 struct FrontMatter {
     title: Option<String>,
+    #[serde(default)]
+    applications: Vec<String>,
 }
 
 fn parse_front_matter(content: &str) -> Option<FrontMatter> {
@@ -104,6 +106,9 @@ pub struct Config {
 }
 
 fn config_path() -> Result<PathBuf, String> {
+    if let Ok(dir) = std::env::var("TINYSPEC_HOME") {
+        return Ok(PathBuf::from(dir).join("config.yaml"));
+    }
     let home = std::env::var("HOME").map_err(|_| "HOME environment variable not set".to_string())?;
     Ok(PathBuf::from(home).join(".tinyspec").join("config.yaml"))
 }
@@ -406,7 +411,58 @@ pub fn list() -> Result<(), String> {
 pub fn view(name: &str) -> Result<(), String> {
     let path = find_spec(name)?;
     let content = fs::read_to_string(&path).map_err(|e| format!("Failed to read spec: {e}"))?;
-    print!("{content}");
+
+    // Parse frontmatter to check for application references
+    let apps: Vec<String> = parse_front_matter(&content)
+        .map(|fm| {
+            fm.applications
+                .into_iter()
+                .filter(|a| !a.is_empty())
+                .collect()
+        })
+        .unwrap_or_default();
+
+    if apps.is_empty() {
+        print!("{content}");
+        return Ok(());
+    }
+
+    // Resolve application names to folder paths via config
+    let config_path = config_path()?;
+    if !config_path.exists() {
+        return Err(format!(
+            "Spec references applications {:?} but no config file found.\n\
+             Create one with: tinyspec config set <repo-name> <path>",
+            apps
+        ));
+    }
+
+    let config = load_config()?;
+    let mut missing: Vec<&str> = Vec::new();
+    let mut replacements: Vec<(&str, &str)> = Vec::new();
+
+    for app in &apps {
+        match config.repositories.get(app.as_str()) {
+            Some(folder) => replacements.push((app.as_str(), folder.as_str())),
+            None => missing.push(app.as_str()),
+        }
+    }
+
+    if !missing.is_empty() {
+        return Err(format!(
+            "Spec references applications not found in config: {}\n\
+             Add them with: tinyspec config set <repo-name> <path>",
+            missing.join(", ")
+        ));
+    }
+
+    // Perform find-and-replace of application names with folder paths
+    let mut output = content;
+    for (app_name, folder_path) in replacements {
+        output = output.replace(app_name, folder_path);
+    }
+
+    print!("{output}");
     Ok(())
 }
 
