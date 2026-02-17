@@ -666,7 +666,12 @@ pub fn init(force: bool) -> Result<(), String> {
 // Claude Code skill prompts
 // ---------------------------------------------------------------------------
 
-const TINYSPEC_REFINE_SKILL: &str = r#"IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
+const TINYSPEC_REFINE_SKILL: &str = r#"---
+name: tinyspec:refine
+description: Refine and structure a tinyspec specification through collaborative discussion
+---
+
+IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
 Read the tinyspec specification at `.specs/$ARGUMENTS.md` (resolve the name by matching the suffix after the timestamp prefix, e.g., `hello-world` matches `2025-02-17-09-36-hello-world.md`).
 
@@ -689,7 +694,12 @@ Use `tinyspec view <spec-name>` to read the current spec and directly edit the f
 After editing a spec file directly, run `tinyspec format <spec-name>` to normalize the Markdown formatting.
 "#;
 
-const TINYSPEC_WORK_SKILL: &str = r#"IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
+const TINYSPEC_WORK_SKILL: &str = r#"---
+name: tinyspec:work
+description: Implement a spec's full Implementation Plan, working through tasks in order
+---
+
+IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
 Read the tinyspec specification at `.specs/$ARGUMENTS.md` (resolve the name by matching the suffix after the timestamp prefix).
 
@@ -712,7 +722,12 @@ Your goal is to work through the spec's Implementation Plan:
 If you encounter ambiguity or a task that requires user input, use the `AskUserQuestion` tool to present structured, selectable options rather than asking inline. Always verify your work compiles/runs before marking tasks complete.
 "#;
 
-const TINYSPEC_TASK_SKILL: &str = r#"IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
+const TINYSPEC_TASK_SKILL: &str = r#"---
+name: tinyspec:task
+description: Implement a single task from a spec's Implementation Plan
+---
+
+IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
 The arguments contain a spec name and a task ID separated by a space: `$ARGUMENTS`
 Parse the first word as the spec name and the second word as the task ID.

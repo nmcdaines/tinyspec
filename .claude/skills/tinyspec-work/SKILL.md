@@ -1,3 +1,8 @@
+---
+name: tinyspec:work
+description: Implement a spec's full Implementation Plan, working through tasks in order
+---
+
 IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
 Read the tinyspec specification at `.specs/$ARGUMENTS.md` (resolve the name by matching the suffix after the timestamp prefix).

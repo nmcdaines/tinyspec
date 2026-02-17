@@ -1,3 +1,8 @@
+---
+name: tinyspec:refine
+description: Refine and structure a tinyspec specification through collaborative discussion
+---
+
 IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
 Read the tinyspec specification at `.specs/$ARGUMENTS.md` (resolve the name by matching the suffix after the timestamp prefix, e.g., `hello-world` matches `2025-02-17-09-36-hello-world.md`).

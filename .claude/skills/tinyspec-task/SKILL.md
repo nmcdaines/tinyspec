@@ -1,3 +1,8 @@
+---
+name: tinyspec:task
+description: Implement a single task from a spec's Implementation Plan
+---
+
 IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
 The arguments contain a spec name and a task ID separated by a space: `$ARGUMENTS`
