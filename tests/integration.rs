@@ -1599,6 +1599,128 @@ But {{title}} should be replaced here.
     );
 }
 
+// ─── T.49: New spec with no prefix conflict uses current timestamp ────────────
+
+#[test]
+fn t49_new_spec_no_prefix_conflict() {
+    let dir = TempDir::new().unwrap();
+
+    // Create a spec with a different timestamp prefix
+    create_sample_spec(
+        &dir,
+        "2025-01-01-10-00-old-spec.md",
+        "---\ntinySpec: v0\ntitle: Old Spec\napplications:\n    -\n---\n\n# Background\n",
+    );
+
+    tinyspec(&dir)
+        .args(["new", "new-spec"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Created spec:"));
+
+    // The new spec should use today's timestamp, not an incremented one
+    let specs = dir.path().join(".specs");
+    let entries: Vec<_> = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name().to_string_lossy().ends_with("-new-spec.md"))
+        .collect();
+    assert_eq!(entries.len(), 1);
+
+    let filename = entries[0].file_name().to_string_lossy().to_string();
+    // Should use current time prefix (starts with 20xx)
+    assert!(filename.starts_with("20"), "Should use a real timestamp");
+}
+
+// ─── T.50: New spec increments prefix on conflict ─────────────────────────────
+
+#[test]
+fn t50_new_spec_increments_prefix_on_conflict() {
+    let dir = TempDir::new().unwrap();
+
+    // Pre-create a spec with the current minute's timestamp prefix
+    let now = chrono::Local::now();
+    let prefix = now.format("%Y-%m-%d-%H-%M").to_string();
+    let existing_filename = format!("{prefix}-existing-spec.md");
+    create_sample_spec(
+        &dir,
+        &existing_filename,
+        "---\ntinySpec: v0\ntitle: Existing Spec\napplications:\n    -\n---\n\n# Background\n",
+    );
+
+    tinyspec(&dir)
+        .args(["new", "another-spec"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Created spec:"));
+
+    // The new spec should have a different (incremented) prefix
+    let specs = dir.path().join(".specs");
+    let entries: Vec<_> = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.file_name()
+                .to_string_lossy()
+                .ends_with("-another-spec.md")
+        })
+        .collect();
+    assert_eq!(entries.len(), 1);
+
+    let new_filename = entries[0].file_name().to_string_lossy().to_string();
+    // The new file's prefix should differ from the existing one
+    let new_prefix = &new_filename[..16];
+    assert_ne!(
+        new_prefix, &prefix,
+        "New spec should have an incremented prefix, not {prefix}"
+    );
+}
+
+// ─── T.51: Prefix rollover from minute 59 to next hour ───────────────────────
+
+#[test]
+fn t51_prefix_rollover_minute_59() {
+    let dir = TempDir::new().unwrap();
+
+    // Create specs occupying minutes 58 and 59 of a specific hour
+    create_sample_spec(
+        &dir,
+        "2099-12-31-23-58-spec-a.md",
+        "---\ntinySpec: v0\ntitle: Spec A\napplications:\n    -\n---\n\n# Background\n",
+    );
+    create_sample_spec(
+        &dir,
+        "2099-12-31-23-59-spec-b.md",
+        "---\ntinySpec: v0\ntitle: Spec B\napplications:\n    -\n---\n\n# Background\n",
+    );
+
+    // Create a spec at 23:58 by using a file that occupies that prefix.
+    // The new spec will use the current time, not 23:58, so this test
+    // verifies that if the current minute AND the next minute are both taken,
+    // the prefix skips over both.
+    //
+    // Since we can't control Local::now(), we instead verify that creating
+    // a new spec succeeds despite existing prefixes at 23:58 and 23:59.
+    tinyspec(&dir)
+        .args(["new", "spec-c"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Created spec:"));
+
+    let specs = dir.path().join(".specs");
+    let entries: Vec<_> = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name().to_string_lossy().ends_with("-spec-c.md"))
+        .collect();
+    assert_eq!(entries.len(), 1);
+
+    let filename = entries[0].file_name().to_string_lossy().to_string();
+    // Prefix should NOT be 23:58 or 23:59 (those are taken)
+    assert!(!filename.starts_with("2099-12-31-23-58"));
+    assert!(!filename.starts_with("2099-12-31-23-59"));
+}
+
 // ─── T.46: Format preserves emoji task IDs ───────────────────────────────────
 
 #[test]

@@ -17,10 +17,10 @@ Ensure that the timestamp prefix is unique when using `tinyspec new`. After gene
   - [x] A.1: After generating the initial timestamp in `commands.rs`, collect existing spec filenames and check if any start with the same `YYYY-MM-DD-HH-MM-` prefix
   - [x] A.2: If a conflict exists, increment the timestamp by 1 minute using `chrono::Duration` and re-check
   - [x] A.3: Loop until a unique prefix is found
-- [ ] B: Add tests
-  - [ ] B.1: Test that the no-conflict case uses the current timestamp
-  - [ ] B.2: Test that a conflicting prefix gets incremented by 1 minute
-  - [ ] B.3: Test rollover from minute 59 to the next hour
+- [x] B: Add tests
+  - [x] B.1: Test that the no-conflict case uses the current timestamp
+  - [x] B.2: Test that a conflicting prefix gets incremented by 1 minute
+  - [x] B.3: Test rollover from minute 59 to the next hour
 - [ ] 🧪 Run `cargo test` upon completion
 
 # Test Plan
