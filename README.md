@@ -150,6 +150,61 @@ applications:
 ---
 ```
 
+## Templates
+
+Templates let you customize the scaffold used when creating new specs with `tinyspec new`.
+
+### Template locations
+
+Templates are Markdown files stored in one of two directories:
+
+- `.specs/templates/` — repo-level (takes precedence)
+- `~/.config/tinyspec/templates/` — user-level (fallback)
+
+The template name is the filename without the `.md` extension. A template named `default` is automatically applied when you run `tinyspec new` without the `--template` flag.
+
+To use a specific template:
+
+```sh
+tinyspec new my-feature --template my-template
+```
+
+List available templates:
+
+```sh
+tinyspec templates
+```
+
+### Template variables
+
+Templates support variable substitution using either `{{var}}` or `${var}` syntax. The following built-in variables are available:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `title` | Title-cased spec name | `my-feature` → `My Feature` |
+| `date` | Current date | `2026-02-18` |
+
+Example template:
+
+```markdown
+---
+tinySpec: v0
+title: {{title}}
+---
+
+# Background
+
+Created on ${date}.
+
+# Proposal
+
+# Implementation Plan
+
+# Test Plan
+```
+
+Variables inside fenced code blocks and inline code are not substituted, so you can safely document variable syntax in your templates. Unknown variables are left as-is.
+
 ## Develop
 
 Build from source:
