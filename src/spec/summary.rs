@@ -293,6 +293,33 @@ Some background.
     }
 
     #[test]
+    fn parse_tasks_with_emoji_group_ids() {
+        let content = "\
+# Implementation Plan
+
+- [ ] 🧪: Testing tasks
+  - [x] 🧪.1: Write unit tests
+  - [ ] 🧪.2: Write integration tests
+- [ ] 🚀: Deployment tasks
+  - [ ] 🚀.1: Deploy to staging
+
+# Test Plan
+";
+        let tasks = parse_tasks(content);
+        assert_eq!(tasks.len(), 2);
+        assert_eq!(tasks[0].id, "🧪");
+        assert!(!tasks[0].checked);
+        assert_eq!(tasks[0].children.len(), 2);
+        assert_eq!(tasks[0].children[0].id, "🧪.1");
+        assert!(tasks[0].children[0].checked);
+        assert_eq!(tasks[0].children[1].id, "🧪.2");
+        assert!(!tasks[0].children[1].checked);
+        assert_eq!(tasks[1].id, "🚀");
+        assert_eq!(tasks[1].children.len(), 1);
+        assert_eq!(tasks[1].children[0].id, "🚀.1");
+    }
+
+    #[test]
     fn extract_timestamp_from_filename() {
         assert_eq!(
             extract_timestamp("2026-02-17-21-27-dashboard.md"),

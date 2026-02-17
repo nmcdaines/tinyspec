@@ -63,7 +63,7 @@ enum Commands {
         /// Spec name
         #[arg(add = ArgValueCompleter::new(spec::complete_spec_names))]
         spec_name: String,
-        /// Task ID (e.g. A, A.1, B)
+        /// Task ID (e.g. A, A.1, B, or emoji like 🧪, 🧪.1)
         task_id: String,
     },
 
@@ -72,7 +72,7 @@ enum Commands {
         /// Spec name
         #[arg(add = ArgValueCompleter::new(spec::complete_spec_names))]
         spec_name: String,
-        /// Task ID (e.g. A, A.1, B)
+        /// Task ID (e.g. A, A.1, B, or emoji like 🧪, 🧪.1)
         task_id: String,
     },
 

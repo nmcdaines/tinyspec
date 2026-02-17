@@ -1337,3 +1337,191 @@ fn t42_template_not_found() {
         .failure()
         .stderr(predicate::str::contains("No template found"));
 }
+
+// ─── T.43: Check/uncheck with emoji task group IDs ───────────────────────────
+
+#[test]
+fn t43_check_emoji_task_ids() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Emoji Tasks
+applications:
+    -
+---
+
+# Implementation Plan
+
+- [ ] \u{1F9EA}: Testing tasks
+    - [ ] \u{1F9EA}.1: Write unit tests
+    - [ ] \u{1F9EA}.2: Write integration tests
+- [ ] \u{1F680}: Deployment tasks
+    - [ ] \u{1F680}.1: Deploy to staging
+
+# Test Plan
+
+";
+    create_sample_spec(&dir, "2025-03-01-10-00-emoji-tasks.md", content);
+
+    // Check an emoji subtask
+    tinyspec(&dir)
+        .args(["check", "emoji-tasks", "\u{1F9EA}.1"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Checked task \u{1F9EA}.1"));
+
+    let updated =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-emoji-tasks.md")).unwrap();
+    assert!(
+        updated.contains("- [x] \u{1F9EA}.1: Write unit tests"),
+        "Emoji subtask should be checked"
+    );
+    assert!(
+        updated.contains("- [ ] \u{1F9EA}.2: Write integration tests"),
+        "Other emoji subtask should remain unchecked"
+    );
+    assert!(
+        updated.contains("- [ ] \u{1F680}: Deployment tasks"),
+        "Other emoji group should remain unchecked"
+    );
+
+    // Uncheck the emoji subtask
+    tinyspec(&dir)
+        .args(["uncheck", "emoji-tasks", "\u{1F9EA}.1"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Unchecked task \u{1F9EA}.1"));
+
+    let updated =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-emoji-tasks.md")).unwrap();
+    assert!(
+        updated.contains("- [ ] \u{1F9EA}.1: Write unit tests"),
+        "Emoji subtask should be unchecked"
+    );
+}
+
+// ─── T.44: Status counts emoji tasks correctly ───────────────────────────────
+
+#[test]
+fn t44_status_with_emoji_tasks() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Emoji Status
+applications:
+    -
+---
+
+# Implementation Plan
+
+- [ ] \u{1F9EA}: Testing tasks
+    - [x] \u{1F9EA}.1: Write unit tests
+    - [ ] \u{1F9EA}.2: Write integration tests
+- [x] \u{1F680}: Deploy
+
+# Test Plan
+
+";
+    create_sample_spec(&dir, "2025-03-01-10-00-emoji-status.md", content);
+
+    tinyspec(&dir)
+        .args(["status", "emoji-status"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("2/4 tasks complete"));
+}
+
+// ─── T.45: Check emoji top-level group ID ────────────────────────────────────
+
+#[test]
+fn t45_check_emoji_top_level() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Emoji Top Level
+applications:
+    -
+---
+
+# Implementation Plan
+
+- [ ] \u{1F9EA}: Testing tasks
+- [ ] \u{1F680}: Deploy
+
+# Test Plan
+
+";
+    create_sample_spec(&dir, "2025-03-01-10-00-emoji-top.md", content);
+
+    tinyspec(&dir)
+        .args(["check", "emoji-top", "\u{1F680}"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Checked task \u{1F680}"));
+
+    let updated =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-emoji-top.md")).unwrap();
+    assert!(updated.contains("- [x] \u{1F680}: Deploy"));
+    assert!(updated.contains("- [ ] \u{1F9EA}: Testing tasks"));
+}
+
+// ─── T.46: Format preserves emoji task IDs ───────────────────────────────────
+
+#[test]
+fn t46_format_preserves_emoji_task_ids() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Emoji Format
+applications:
+    -
+---
+
+# Implementation Plan
+
+- [ ] \u{1F9EA}: Testing tasks
+    - [ ] \u{1F9EA}.1: Write unit tests
+    - [ ] \u{1F9EA}.2: Write integration tests
+- [ ] \u{1F680}: Deploy
+
+# Test Plan
+
+";
+    create_sample_spec(&dir, "2025-03-01-10-00-emoji-format.md", content);
+
+    tinyspec(&dir)
+        .args(["format", "emoji-format"])
+        .assert()
+        .success();
+
+    let formatted =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-emoji-format.md")).unwrap();
+    assert!(
+        formatted.contains("\u{1F9EA}"),
+        "Emoji should be preserved after formatting"
+    );
+    assert!(
+        formatted.contains("\u{1F9EA}.1: Write unit tests"),
+        "Emoji subtask IDs should be preserved"
+    );
+    assert!(
+        formatted.contains("\u{1F680}: Deploy"),
+        "Other emoji IDs should be preserved"
+    );
+
+    // Formatting should be idempotent
+    tinyspec(&dir)
+        .args(["format", "emoji-format"])
+        .assert()
+        .success();
+    let second =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-emoji-format.md")).unwrap();
+    assert_eq!(
+        formatted, second,
+        "Formatter should be idempotent with emoji"
+    );
+}
