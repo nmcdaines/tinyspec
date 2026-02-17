@@ -65,6 +65,16 @@ enum Commands {
         task_id: String,
     },
 
+    /// Format a spec's Markdown (or all specs with --all)
+    Format {
+        /// Spec name (omit if using --all)
+        #[arg(add = ArgValueCompleter::new(spec::complete_spec_names), required_unless_present = "all")]
+        spec_name: Option<String>,
+        /// Format all specs
+        #[arg(long)]
+        all: bool,
+    },
+
     /// Show completion progress for a spec (or all specs)
     Status {
         /// Spec name (shows all specs if omitted)
@@ -87,6 +97,13 @@ fn main() {
         Commands::Delete { spec_name } => spec::delete(&spec_name),
         Commands::Check { spec_name, task_id } => spec::check_task(&spec_name, &task_id, true),
         Commands::Uncheck { spec_name, task_id } => spec::check_task(&spec_name, &task_id, false),
+        Commands::Format { spec_name, all } => {
+            if all {
+                spec::format_all_specs()
+            } else {
+                spec::format_spec(spec_name.as_deref().unwrap())
+            }
+        }
         Commands::Status { spec_name } => spec::status(spec_name.as_deref()),
     };
 

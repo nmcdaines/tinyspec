@@ -389,3 +389,157 @@ fn t14_init_prints_shell_completion_instructions() {
         .success()
         .stdout(predicate::str::contains("source <(COMPLETE=zsh tinyspec)"));
 }
+
+// ─── T.15: Format normalizes inconsistent Markdown ──────────────────────────
+
+#[test]
+fn t15_format_normalizes_markdown() {
+    let dir = TempDir::new().unwrap();
+
+    // Spec with inconsistent spacing (extra blank lines, missing blank lines)
+    let messy = "\
+---
+tinySpec: v0
+title: Messy Spec
+applications:
+    - app
+---
+
+
+# Background
+
+
+
+Some background text.
+
+
+
+# Proposal
+No blank line after heading.
+
+
+# Implementation Plan
+
+- [ ] A: First task
+
+# Test Plan
+
+";
+    create_sample_spec(&dir, "2025-03-01-10-00-messy.md", messy);
+
+    tinyspec(&dir)
+        .args(["format", "messy"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Formatted"));
+
+    let formatted = fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-messy.md")).unwrap();
+
+    // Headings should be present
+    assert!(formatted.contains("# Background"));
+    assert!(formatted.contains("# Proposal"));
+    assert!(formatted.contains("# Implementation Plan"));
+    assert!(formatted.contains("# Test Plan"));
+    // Content preserved
+    assert!(formatted.contains("Some background text."));
+    assert!(formatted.contains("No blank line after heading."));
+    assert!(formatted.contains("- [ ] A: First task"));
+
+    // Formatting is idempotent: running again produces the same output
+    tinyspec(&dir)
+        .args(["format", "messy"])
+        .assert()
+        .success();
+    let second = fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-messy.md")).unwrap();
+    assert_eq!(formatted, second, "Formatter is not idempotent");
+}
+
+// ─── T.16: Format preserves YAML front matter ──────────────────────────────
+
+#[test]
+fn t16_format_preserves_front_matter() {
+    let dir = TempDir::new().unwrap();
+
+    let content = "\
+---
+tinySpec: v0
+title: Front Matter Test
+applications:
+    - my-app
+---
+
+# Background
+
+Some text.
+
+# Test Plan
+
+";
+    create_sample_spec(&dir, "2025-03-01-10-00-fm-test.md", content);
+
+    tinyspec(&dir)
+        .args(["format", "fm-test"])
+        .assert()
+        .success();
+
+    let formatted =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-fm-test.md")).unwrap();
+
+    // Front matter must be preserved exactly
+    assert!(formatted.starts_with("---\ntinySpec: v0\ntitle: Front Matter Test\napplications:\n    - my-app\n---\n"));
+}
+
+// ─── T.17: Format --all formats all specs ───────────────────────────────────
+
+#[test]
+fn t17_format_all_specs() {
+    let dir = TempDir::new().unwrap();
+
+    create_sample_spec(
+        &dir,
+        "2025-01-01-10-00-alpha.md",
+        "---\ntinySpec: v0\ntitle: Alpha\napplications:\n    -\n---\n\n# Background\n\nAlpha text.\n",
+    );
+    create_sample_spec(
+        &dir,
+        "2025-02-01-10-00-beta.md",
+        "---\ntinySpec: v0\ntitle: Beta\napplications:\n    -\n---\n\n# Background\n\nBeta text.\n",
+    );
+
+    tinyspec(&dir)
+        .args(["format", "--all"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Formatted 2025-01-01-10-00-alpha.md"))
+        .stdout(predicate::str::contains("Formatted 2025-02-01-10-00-beta.md"));
+}
+
+// ─── T.18: New spec is auto-formatted ───────────────────────────────────────
+
+#[test]
+fn t18_new_spec_is_auto_formatted() {
+    let dir = TempDir::new().unwrap();
+
+    tinyspec(&dir)
+        .args(["new", "auto-fmt"])
+        .assert()
+        .success();
+
+    let specs = dir.path().join(".specs");
+    let entry = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .next()
+        .unwrap();
+
+    let content = fs::read_to_string(entry.path()).unwrap();
+
+    // Running format again should produce identical output (already formatted)
+    tinyspec(&dir)
+        .args(["format", "auto-fmt"])
+        .assert()
+        .success();
+
+    let after_format = fs::read_to_string(entry.path()).unwrap();
+    assert_eq!(content, after_format, "New spec was not already formatted");
+}
