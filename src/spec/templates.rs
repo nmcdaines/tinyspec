@@ -158,22 +158,28 @@ pub fn substitute_variables(content: &str, vars: &HashMap<&str, &str>) -> String
         }
 
         // Check for {{var}} syntax
-        if i + 3 < len && chars[i] == '{' && chars[i + 1] == '{'
+        if i + 3 < len
+            && chars[i] == '{'
+            && chars[i + 1] == '{'
             && let Some((name, end)) = extract_var_name(&chars, i + 2, '}', '}')
-                && let Some(value) = vars.get(name.as_str()) {
-                    result.push_str(value);
-                    i = end;
-                    continue;
-                }
+            && let Some(value) = vars.get(name.as_str())
+        {
+            result.push_str(value);
+            i = end;
+            continue;
+        }
 
         // Check for ${var} syntax
-        if i + 2 < len && chars[i] == '$' && chars[i + 1] == '{'
+        if i + 2 < len
+            && chars[i] == '$'
+            && chars[i + 1] == '{'
             && let Some((name, end)) = extract_var_name(&chars, i + 2, '}', '\0')
-                && let Some(value) = vars.get(name.as_str()) {
-                    result.push_str(value);
-                    i = end;
-                    continue;
-                }
+            && let Some(value) = vars.get(name.as_str())
+        {
+            result.push_str(value);
+            i = end;
+            continue;
+        }
 
         result.push(chars[i]);
         i += 1;
