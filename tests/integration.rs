@@ -553,3 +553,228 @@ fn t18_new_spec_is_auto_formatted() {
     let after_format = fs::read_to_string(entry.path()).unwrap();
     assert_eq!(content, after_format, "New spec was not already formatted");
 }
+
+// ─── T.19: Config set creates config file and adds mapping ──────────────────
+
+#[test]
+fn t19_config_set_creates_config() {
+    let dir = TempDir::new().unwrap();
+    let config_dir = dir.path().join(".tinyspec-config");
+
+    tinyspec(&dir)
+        .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
+        .args(["config", "set", "tinyspec", "/path/to/tinyspec"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Set tinyspec = /path/to/tinyspec"));
+
+    let config = fs::read_to_string(config_dir.join("config.yaml")).unwrap();
+    assert!(config.contains("tinyspec"));
+    assert!(config.contains("/path/to/tinyspec"));
+}
+
+// ─── T.20: Config list displays all mappings ────────────────────────────────
+
+#[test]
+fn t20_config_list_displays_mappings() {
+    let dir = TempDir::new().unwrap();
+    let config_dir = dir.path().join(".tinyspec-config");
+    fs::create_dir_all(&config_dir).unwrap();
+    fs::write(
+        config_dir.join("config.yaml"),
+        "repositories:\n  alpha: /path/alpha\n  beta: /path/beta\n",
+    )
+    .unwrap();
+
+    tinyspec(&dir)
+        .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
+        .args(["config", "list"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("alpha: /path/alpha"))
+        .stdout(predicate::str::contains("beta: /path/beta"));
+}
+
+// ─── T.21: Config remove deletes a mapping ──────────────────────────────────
+
+#[test]
+fn t21_config_remove_deletes_mapping() {
+    let dir = TempDir::new().unwrap();
+    let config_dir = dir.path().join(".tinyspec-config");
+    fs::create_dir_all(&config_dir).unwrap();
+    fs::write(
+        config_dir.join("config.yaml"),
+        "repositories:\n  alpha: /path/alpha\n  beta: /path/beta\n",
+    )
+    .unwrap();
+
+    tinyspec(&dir)
+        .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
+        .args(["config", "remove", "alpha"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Removed alpha"));
+
+    // Verify alpha is gone but beta remains
+    let config = fs::read_to_string(config_dir.join("config.yaml")).unwrap();
+    assert!(!config.contains("alpha"));
+    assert!(config.contains("beta"));
+}
+
+// ─── T.22: Config set updates existing mapping ──────────────────────────────
+
+#[test]
+fn t22_config_set_updates_existing() {
+    let dir = TempDir::new().unwrap();
+    let config_dir = dir.path().join(".tinyspec-config");
+    fs::create_dir_all(&config_dir).unwrap();
+    fs::write(
+        config_dir.join("config.yaml"),
+        "repositories:\n  myrepo: /old/path\n",
+    )
+    .unwrap();
+
+    tinyspec(&dir)
+        .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
+        .args(["config", "set", "myrepo", "/new/path"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Set myrepo = /new/path"));
+
+    let config = fs::read_to_string(config_dir.join("config.yaml")).unwrap();
+    assert!(config.contains("/new/path"));
+    assert!(!config.contains("/old/path"));
+}
+
+// ─── T.23: View resolves application names when config exists ───────────────
+
+#[test]
+fn t23_view_resolves_applications() {
+    let dir = TempDir::new().unwrap();
+    let config_dir = dir.path().join(".tinyspec-config");
+    fs::create_dir_all(&config_dir).unwrap();
+    fs::write(
+        config_dir.join("config.yaml"),
+        "repositories:\n  my-app: /resolved/my-app\n",
+    )
+    .unwrap();
+
+    create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &sample_spec_content());
+
+    let output = tinyspec(&dir)
+        .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
+        .args(["view", "hello-world"])
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // Application name should be replaced with the resolved path
+    assert!(
+        stdout.contains("/resolved/my-app"),
+        "Expected resolved path in output, got: {stdout}"
+    );
+}
+
+// ─── T.24: View errors when config missing and applications specified ───────
+
+#[test]
+fn t24_view_errors_when_config_missing() {
+    let dir = TempDir::new().unwrap();
+    let config_dir = dir.path().join(".nonexistent-config");
+
+    create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &sample_spec_content());
+
+    tinyspec(&dir)
+        .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
+        .args(["view", "hello-world"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("no config file found"))
+        .stderr(predicate::str::contains("tinyspec config set"));
+}
+
+// ─── T.25: View errors when application name not in config ──────────────────
+
+#[test]
+fn t25_view_errors_when_app_unmapped() {
+    let dir = TempDir::new().unwrap();
+    let config_dir = dir.path().join(".tinyspec-config");
+    fs::create_dir_all(&config_dir).unwrap();
+    // Config exists but doesn't have "my-app"
+    fs::write(
+        config_dir.join("config.yaml"),
+        "repositories:\n  other-repo: /path/other\n",
+    )
+    .unwrap();
+
+    create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &sample_spec_content());
+
+    tinyspec(&dir)
+        .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
+        .args(["view", "hello-world"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("my-app"))
+        .stderr(predicate::str::contains("tinyspec config set"));
+}
+
+// ─── T.26: View works normally with no applications ─────────────────────────
+
+#[test]
+fn t26_view_no_applications_works() {
+    let dir = TempDir::new().unwrap();
+    let config_dir = dir.path().join(".nonexistent-config");
+
+    let content = "\
+---
+tinySpec: v0
+title: No Apps
+applications:
+    -
+---
+
+# Background
+
+Some text.
+";
+    create_sample_spec(&dir, "2025-02-17-09-36-no-apps.md", content);
+
+    tinyspec(&dir)
+        .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
+        .args(["view", "no-apps"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("title: No Apps"))
+        .stdout(predicate::str::contains("Some text."));
+}
+
+// ─── T.27: Init generates updated slash command files ───────────────────────
+
+#[test]
+fn t27_init_generates_updated_skills() {
+    let dir = TempDir::new().unwrap();
+
+    tinyspec(&dir).args(["init"]).assert().success();
+
+    let commands_dir = dir.path().join(".claude/commands");
+
+    let work = fs::read_to_string(commands_dir.join("spec-work.md")).unwrap();
+    assert!(
+        work.contains("tinyspec view"),
+        "spec-work.md should reference `tinyspec view`"
+    );
+    assert!(
+        work.contains("multiple applications"),
+        "spec-work.md should mention multiple applications"
+    );
+
+    let task = fs::read_to_string(commands_dir.join("spec-task.md")).unwrap();
+    assert!(
+        task.contains("tinyspec view"),
+        "spec-task.md should reference `tinyspec view`"
+    );
+    assert!(
+        task.contains("multiple applications"),
+        "spec-task.md should mention multiple applications"
+    );
+}

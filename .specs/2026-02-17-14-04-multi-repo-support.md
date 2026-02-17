@@ -56,12 +56,12 @@ repositories:
 
 # Test Plan
 
-- [ ] T.1: Given no config file exists, when `config set tinyspec /path/to/tinyspec` is run, then `~/.tinyspec/config.yaml` is created with the mapping
-- [ ] T.2: Given a config file with mappings exists, when `config list` is run, then all repository mappings are displayed
-- [ ] T.3: Given a config file with a mapping exists, when `config remove <repo-name>` is run, then the mapping is deleted
-- [ ] T.4: Given a config file with an existing mapping, when `config set` is run with the same name and a new path, then the path is updated
-- [ ] T.5: Given a spec with applications and a valid config, when `view <spec-name>` is run, then application names are replaced with folder paths in the output
-- [ ] T.6: Given a spec with applications but no config file, when `view <spec-name>` is run, then a clear error is shown
-- [ ] T.7: Given a spec with applications and a config missing one mapping, when `view <spec-name>` is run, then an error identifies the unmapped name
-- [ ] T.8: Given a spec with no applications, when `view <spec-name>` is run, then the spec is displayed normally (backwards compatible)
-- [ ] T.9: Given `init` is run, then the generated slash command files contain updated multi-repo instructions
+- [x] T.1: Given no config file exists, when `config set tinyspec /path/to/tinyspec` is run, then `~/.tinyspec/config.yaml` is created with the mapping
+- [x] T.2: Given a config file with mappings exists, when `config list` is run, then all repository mappings are displayed
+- [x] T.3: Given a config file with a mapping exists, when `config remove <repo-name>` is run, then the mapping is deleted
+- [x] T.4: Given a config file with an existing mapping, when `config set` is run with the same name and a new path, then the path is updated
+- [x] T.5: Given a spec with applications and a valid config, when `view <spec-name>` is run, then application names are replaced with folder paths in the output
+- [x] T.6: Given a spec with applications but no config file, when `view <spec-name>` is run, then a clear error is shown
+- [x] T.7: Given a spec with applications and a config missing one mapping, when `view <spec-name>` is run, then an error identifies the unmapped name
+- [x] T.8: Given a spec with no applications, when `view <spec-name>` is run, then the spec is displayed normally (backwards compatible)
+- [x] T.9: Given `init` is run, then the generated slash command files contain updated multi-repo instructions
