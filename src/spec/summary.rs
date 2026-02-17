@@ -209,7 +209,13 @@ pub fn load_all_summaries() -> Result<Vec<SpecSummary>, String> {
         a_done
             .cmp(&b_done) // incomplete (false) before completed (true)
             .then_with(|| a.group.cmp(&b.group))
-            .then_with(|| a.timestamp.cmp(&b.timestamp))
+            .then_with(|| {
+                if a_done && b_done {
+                    b.timestamp.cmp(&a.timestamp) // completed: newest first
+                } else {
+                    a.timestamp.cmp(&b.timestamp) // in-progress: oldest first
+                }
+            })
     });
 
     Ok(summaries)
