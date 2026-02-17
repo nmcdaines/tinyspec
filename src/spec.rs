@@ -607,16 +607,19 @@ pub fn init(force: bool) -> Result<(), String> {
     if force {
         let commands_dir = Path::new(".claude/commands");
         if commands_dir.is_dir()
-            && let Ok(entries) = fs::read_dir(commands_dir) {
-                for entry in entries.flatten() {
-                    let name = entry.file_name();
-                    let name = name.to_string_lossy();
-                    if name.starts_with("tinyspec") && name.ends_with(".md")
-                        && fs::remove_file(entry.path()).is_ok() {
-                            println!("Removed legacy .claude/commands/{name}");
-                        }
+            && let Ok(entries) = fs::read_dir(commands_dir)
+        {
+            for entry in entries.flatten() {
+                let name = entry.file_name();
+                let name = name.to_string_lossy();
+                if name.starts_with("tinyspec")
+                    && name.ends_with(".md")
+                    && fs::remove_file(entry.path()).is_ok()
+                {
+                    println!("Removed legacy .claude/commands/{name}");
                 }
             }
+        }
     }
 
     let skills_dir = Path::new(".claude/skills");
