@@ -31,26 +31,56 @@ pub(crate) fn extract_spec_name(filename: &str) -> Option<&str> {
     }
 }
 
+/// Collect all spec .md file paths from `.specs/` and its immediate subdirectories.
+pub(crate) fn collect_spec_files() -> Result<Vec<PathBuf>, String> {
+    let dir = specs_dir();
+    if !dir.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut files = Vec::new();
+    let entries =
+        fs::read_dir(&dir).map_err(|e| format!("Failed to read .specs/ directory: {e}"))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Failed to read directory entry: {e}"))?;
+        let path = entry.path();
+        if path.is_dir() {
+            // One level of subdirectories
+            if let Ok(sub_entries) = fs::read_dir(&path) {
+                for sub_entry in sub_entries.flatten() {
+                    let sub_path = sub_entry.path();
+                    if sub_path.extension().is_some_and(|ext| ext == "md") {
+                        files.push(sub_path);
+                    }
+                }
+            }
+        } else if path.extension().is_some_and(|ext| ext == "md") {
+            files.push(path);
+        }
+    }
+
+    Ok(files)
+}
+
 /// Find the spec file matching the given name (exact match on the name portion).
+/// Searches `.specs/` and its immediate subdirectories.
 pub(crate) fn find_spec(name: &str) -> Result<PathBuf, String> {
     let dir = specs_dir();
     if !dir.exists() {
         return Err("No .specs/ directory found".into());
     }
 
-    let entries =
-        fs::read_dir(&dir).map_err(|e| format!("Failed to read .specs/ directory: {e}"))?;
-
-    let mut matches = Vec::new();
-    for entry in entries {
-        let entry = entry.map_err(|e| format!("Failed to read directory entry: {e}"))?;
-        let filename = entry.file_name().to_string_lossy().to_string();
-        if let Some(spec_name) = extract_spec_name(&filename)
-            && spec_name == name
-        {
-            matches.push(entry.path());
-        }
-    }
+    let files = collect_spec_files()?;
+    let mut matches: Vec<PathBuf> = files
+        .into_iter()
+        .filter(|path| {
+            path.file_name()
+                .and_then(|f| f.to_str())
+                .and_then(|f| extract_spec_name(f))
+                == Some(name)
+        })
+        .collect();
 
     match matches.len() {
         0 => Err(format!("No spec found matching '{name}'")),
@@ -65,18 +95,19 @@ pub(crate) fn find_spec(name: &str) -> Result<PathBuf, String> {
 
 /// Provide spec name completions for shell tab completion.
 pub fn complete_spec_names(current: &std::ffi::OsStr) -> Vec<CompletionCandidate> {
-    let dir = specs_dir();
     let current = current.to_string_lossy();
 
-    let Ok(entries) = fs::read_dir(&dir) else {
+    let Ok(files) = collect_spec_files() else {
         return Vec::new();
     };
 
-    entries
-        .filter_map(|e| e.ok())
-        .filter_map(|e| {
-            let filename = e.file_name().to_string_lossy().to_string();
-            extract_spec_name(&filename).map(|name| name.to_string())
+    files
+        .iter()
+        .filter_map(|path| {
+            path.file_name()
+                .and_then(|f| f.to_str())
+                .and_then(|f| extract_spec_name(f))
+                .map(|name| name.to_string())
         })
         .filter(|name| name.starts_with(current.as_ref()))
         .map(CompletionCandidate::new)
@@ -125,4 +156,29 @@ pub(crate) fn validate_kebab_case(name: &str) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+/// Parse a spec input that may include a group prefix (e.g. `v1/feature`).
+/// Returns (group, name) where group is None for ungrouped specs.
+/// Only single-level grouping is supported.
+pub(crate) fn parse_spec_input(input: &str) -> Result<(Option<&str>, &str), String> {
+    if let Some((group, name)) = input.split_once('/') {
+        if name.contains('/') {
+            return Err(
+                "Only single-level grouping is supported (e.g. v1/feature, not v1/sub/feature)"
+                    .into(),
+            );
+        }
+        validate_kebab_case(group).map_err(|_| {
+            format!(
+                "Invalid group name '{group}'. Group names must be kebab-case \
+                 (lowercase letters, numbers, and single hyphens)."
+            )
+        })?;
+        validate_kebab_case(name)?;
+        Ok((Some(group), name))
+    } else {
+        validate_kebab_case(input)?;
+        Ok((None, input))
+    }
 }

@@ -6,13 +6,32 @@ use chrono::Local;
 
 use super::config::{config_path, load_config};
 use super::format::format_file;
-use super::{extract_spec_name, find_spec, parse_front_matter, specs_dir, validate_kebab_case};
+use super::{
+    collect_spec_files, extract_spec_name, find_spec, parse_front_matter, parse_spec_input,
+    specs_dir,
+};
 
-pub fn new_spec(name: &str) -> Result<(), String> {
-    validate_kebab_case(name)?;
+pub fn new_spec(input: &str) -> Result<(), String> {
+    let (group, name) = parse_spec_input(input)?;
 
-    let dir = specs_dir();
-    fs::create_dir_all(&dir).map_err(|e| format!("Failed to create .specs/ directory: {e}"))?;
+    // Enforce global uniqueness — check if name already exists anywhere
+    let existing = collect_spec_files().unwrap_or_default();
+    for path in &existing {
+        if let Some(filename) = path.file_name().and_then(|f| f.to_str())
+            && extract_spec_name(filename) == Some(name) {
+                return Err(format!(
+                    "A spec named '{name}' already exists: {}",
+                    path.display()
+                ));
+            }
+    }
+
+    let dir = match group {
+        Some(g) => specs_dir().join(g),
+        None => specs_dir(),
+    };
+    fs::create_dir_all(&dir)
+        .map_err(|e| format!("Failed to create {} directory: {e}", dir.display()))?;
 
     let timestamp = Local::now().format("%Y-%m-%d-%H-%M");
     let filename = format!("{timestamp}-{name}.md");
