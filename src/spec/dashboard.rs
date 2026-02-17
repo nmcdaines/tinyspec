@@ -231,12 +231,13 @@ fn main_loop(
 
         if event::poll(Duration::from_millis(250)).map_err(|e| e.to_string())?
             && let Event::Key(key) = event::read().map_err(|e| e.to_string())?
-                && key.kind == KeyEventKind::Press {
-                    match app.mode {
-                        Mode::List => handle_list_key(app, key.code),
-                        Mode::Detail => handle_detail_key(app, key.code),
-                    }
-                }
+            && key.kind == KeyEventKind::Press
+        {
+            match app.mode {
+                Mode::List => handle_list_key(app, key.code),
+                Mode::Detail => handle_detail_key(app, key.code),
+            }
+        }
 
         if app.should_quit {
             return Ok(());

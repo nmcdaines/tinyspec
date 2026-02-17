@@ -1018,3 +1018,18 @@ applications:
     .unwrap();
     assert!(updated.contains("- [ ] A: First task"));
 }
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+
+#[test]
+fn t34_dashboard_exits_with_error_without_tty() {
+    let dir = TempDir::new().unwrap();
+    create_sample_spec(&dir, "2025-02-17-09-00-my-spec.md", &sample_spec_content());
+
+    // When run without a TTY (as in tests), the dashboard should exit with an error
+    tinyspec(&dir)
+        .arg("dashboard")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("interactive terminal"));
+}
