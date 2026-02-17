@@ -6,12 +6,13 @@ use chrono::Local;
 
 use super::config::{config_path, load_config};
 use super::format::format_file;
+use super::templates::{collect_templates, find_template};
 use super::{
     collect_spec_files, extract_spec_name, find_spec, parse_front_matter, parse_spec_input,
     specs_dir,
 };
 
-pub fn new_spec(input: &str) -> Result<(), String> {
+pub fn new_spec(input: &str, template_name: Option<&str>) -> Result<(), String> {
     let (group, name) = parse_spec_input(input)?;
 
     // Enforce global uniqueness — check if name already exists anywhere
@@ -55,8 +56,29 @@ pub fn new_spec(input: &str) -> Result<(), String> {
         .collect::<Vec<_>>()
         .join(" ");
 
-    let content = format!(
-        "\
+    let date = Local::now().format("%Y-%m-%d").to_string();
+
+    // Resolve template: explicit --template flag, or auto-detect "default"
+    let template = match template_name {
+        Some(name) => Some(find_template(name)?),
+        None => {
+            // Auto-apply "default" template if it exists
+            collect_templates()
+                .unwrap_or_default()
+                .into_iter()
+                .find(|t| t.name == "default")
+        }
+    };
+
+    let content = match template {
+        Some(t) => {
+            let raw = fs::read_to_string(&t.path)
+                .map_err(|e| format!("Failed to read template '{}': {e}", t.name))?;
+            raw.replace("{{title}}", &title).replace("{{date}}", &date)
+        }
+        None => {
+            format!(
+                "\
 ---
 tinySpec: v0
 title: {title}
@@ -79,7 +101,9 @@ applications:
 # Test Plan
 
 "
-    );
+            )
+        }
+    };
 
     fs::write(&path, &content).map_err(|e| format!("Failed to write spec file: {e}"))?;
     format_file(&path)?;

@@ -1033,3 +1033,307 @@ fn t34_dashboard_exits_with_error_without_tty() {
         .failure()
         .stderr(predicate::str::contains("interactive terminal"));
 }
+
+// ─── T.35: Templates command with no templates ───────────────────────────────
+
+#[test]
+fn t35_templates_command_no_templates() {
+    let dir = TempDir::new().unwrap();
+    fs::create_dir_all(dir.path().join(".specs")).unwrap();
+
+    tinyspec(&dir)
+        .args(["templates"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("No templates found."));
+}
+
+// ─── T.36: Templates command lists repo templates ────────────────────────────
+
+#[test]
+fn t36_templates_command_lists_repo_templates() {
+    let dir = TempDir::new().unwrap();
+    let templates_dir = dir.path().join(".specs/templates");
+    fs::create_dir_all(&templates_dir).unwrap();
+    fs::write(
+        templates_dir.join("default.md"),
+        "---\ntinySpec: v0\ntitle: {{title}}\napplications:\n    -\n---\n\n# Background\n",
+    )
+    .unwrap();
+    fs::write(
+        templates_dir.join("rust-lib.md"),
+        "---\ntinySpec: v0\ntitle: {{title}}\napplications:\n    -\n---\n\n# Background\n",
+    )
+    .unwrap();
+
+    tinyspec(&dir)
+        .args(["templates"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("default"))
+        .stdout(predicate::str::contains("rust-lib"))
+        .stdout(predicate::str::contains("(repo)"));
+}
+
+// ─── T.37: Templates directory is excluded from spec listing ─────────────────
+
+#[test]
+fn t37_templates_excluded_from_spec_listing() {
+    let dir = TempDir::new().unwrap();
+
+    // Create a regular spec
+    create_sample_spec(
+        &dir,
+        "2025-01-01-10-00-alpha.md",
+        "---\ntinySpec: v0\ntitle: Alpha\napplications:\n    -\n---\n\n# Background\n",
+    );
+
+    // Create a template (should NOT appear in spec listing)
+    let templates_dir = dir.path().join(".specs/templates");
+    fs::create_dir_all(&templates_dir).unwrap();
+    fs::write(
+        templates_dir.join("default.md"),
+        "---\ntinySpec: v0\ntitle: Default Template\napplications:\n    -\n---\n\n# Background\n",
+    )
+    .unwrap();
+
+    let output = tinyspec(&dir).args(["list"]).output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(stdout.contains("alpha"), "Should list regular spec");
+    assert!(
+        !stdout.contains("Default Template"),
+        "Should NOT list template as a spec"
+    );
+    assert!(
+        !stdout.contains("templates/"),
+        "Should NOT show templates group header"
+    );
+}
+
+// ─── T.38: New spec with --template flag ─────────────────────────────────────
+
+#[test]
+fn t38_new_with_template_flag() {
+    let dir = TempDir::new().unwrap();
+    let templates_dir = dir.path().join(".specs/templates");
+    fs::create_dir_all(&templates_dir).unwrap();
+    fs::write(
+        templates_dir.join("rust-lib.md"),
+        "\
+---
+tinySpec: v0
+title: {{title}}
+applications:
+    -
+---
+
+# Background
+
+This is a Rust library spec.
+
+# Proposal
+
+
+
+# Implementation Plan
+
+- [ ] A: Set up project structure
+- [ ] B: Implement core functionality
+
+# Test Plan
+
+",
+    )
+    .unwrap();
+
+    tinyspec(&dir)
+        .args(["new", "my-lib", "--template", "rust-lib"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Created spec:"));
+
+    // Find the created spec
+    let specs = dir.path().join(".specs");
+    let entries: Vec<_> = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_file())
+        .collect();
+    assert_eq!(entries.len(), 1);
+
+    let content = fs::read_to_string(entries[0].path()).unwrap();
+    assert!(
+        content.contains("title: My Lib"),
+        "Title should be substituted"
+    );
+    assert!(
+        content.contains("This is a Rust library spec."),
+        "Template body should be preserved"
+    );
+    assert!(
+        content.contains("- [ ] A: Set up project structure"),
+        "Template tasks should be preserved"
+    );
+}
+
+// ─── T.39: New spec auto-applies default template ────────────────────────────
+
+#[test]
+fn t39_new_auto_applies_default_template() {
+    let dir = TempDir::new().unwrap();
+    let templates_dir = dir.path().join(".specs/templates");
+    fs::create_dir_all(&templates_dir).unwrap();
+    fs::write(
+        templates_dir.join("default.md"),
+        "\
+---
+tinySpec: v0
+title: {{title}}
+applications:
+    -
+---
+
+# Background
+
+Default template background.
+
+# Proposal
+
+
+
+# Implementation Plan
+
+
+
+# Test Plan
+
+",
+    )
+    .unwrap();
+
+    // No --template flag — should auto-apply "default"
+    tinyspec(&dir)
+        .args(["new", "auto-default"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Created spec:"));
+
+    let specs = dir.path().join(".specs");
+    let entries: Vec<_> = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_file())
+        .collect();
+    assert_eq!(entries.len(), 1);
+
+    let content = fs::read_to_string(entries[0].path()).unwrap();
+    assert!(
+        content.contains("title: Auto Default"),
+        "Title should be substituted"
+    );
+    assert!(
+        content.contains("Default template background."),
+        "Default template body should be used"
+    );
+}
+
+// ─── T.40: New spec without default template uses built-in scaffold ──────────
+
+#[test]
+fn t40_new_without_default_template() {
+    let dir = TempDir::new().unwrap();
+
+    // No templates at all
+    tinyspec(&dir)
+        .args(["new", "vanilla-spec"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Created spec:"));
+
+    let specs = dir.path().join(".specs");
+    let entries: Vec<_> = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .collect();
+    assert_eq!(entries.len(), 1);
+
+    let content = fs::read_to_string(entries[0].path()).unwrap();
+    assert!(content.contains("title: Vanilla Spec"));
+    assert!(content.contains("# Background"));
+    assert!(content.contains("# Implementation Plan"));
+}
+
+// ─── T.41: Template substitutes {{date}} placeholder ─────────────────────────
+
+#[test]
+fn t41_template_substitutes_date() {
+    let dir = TempDir::new().unwrap();
+    let templates_dir = dir.path().join(".specs/templates");
+    fs::create_dir_all(&templates_dir).unwrap();
+    fs::write(
+        templates_dir.join("dated.md"),
+        "\
+---
+tinySpec: v0
+title: {{title}}
+applications:
+    -
+---
+
+# Background
+
+Created on {{date}}.
+
+# Proposal
+
+
+
+# Implementation Plan
+
+
+
+# Test Plan
+
+",
+    )
+    .unwrap();
+
+    tinyspec(&dir)
+        .args(["new", "date-test", "--template", "dated"])
+        .assert()
+        .success();
+
+    let specs = dir.path().join(".specs");
+    let entries: Vec<_> = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_file())
+        .collect();
+
+    let content = fs::read_to_string(entries[0].path()).unwrap();
+    // Date should be a real date, not the placeholder
+    assert!(
+        !content.contains("{{date}}"),
+        "{{date}} placeholder should be replaced"
+    );
+    // Should contain a date pattern like 2026-02-18
+    assert!(
+        content.contains("Created on 20"),
+        "Should contain a date starting with 20xx"
+    );
+}
+
+// ─── T.42: --template with nonexistent template fails ────────────────────────
+
+#[test]
+fn t42_template_not_found() {
+    let dir = TempDir::new().unwrap();
+    fs::create_dir_all(dir.path().join(".specs")).unwrap();
+
+    tinyspec(&dir)
+        .args(["new", "fail-spec", "--template", "nonexistent"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("No template found"));
+}

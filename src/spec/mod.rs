@@ -4,12 +4,14 @@ pub(crate) mod dashboard;
 mod format;
 mod init;
 pub(crate) mod summary;
+pub(crate) mod templates;
 
 // Re-export public API (keeps `spec::function_name` working from main.rs)
 pub use commands::{check_task, delete, edit, list, new_spec, status, view};
 pub use config::{config_list, config_remove, config_set};
 pub use format::{format_all_specs, format_spec};
 pub use init::init;
+pub use templates::list_templates;
 
 use std::fs;
 use std::path::PathBuf;
@@ -48,6 +50,10 @@ pub(crate) fn collect_spec_files() -> Result<Vec<PathBuf>, String> {
         let entry = entry.map_err(|e| format!("Failed to read directory entry: {e}"))?;
         let path = entry.path();
         if path.is_dir() {
+            // Skip the templates directory — it holds spec templates, not specs
+            if path.file_name().is_some_and(|n| n == "templates") {
+                continue;
+            }
             // One level of subdirectories
             if let Ok(sub_entries) = fs::read_dir(&path) {
                 for sub_entry in sub_entries.flatten() {

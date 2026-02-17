@@ -29,6 +29,9 @@ enum Commands {
     New {
         /// Spec name in kebab-case
         spec_name: String,
+        /// Use a named template (from .specs/templates/ or ~/.config/tinyspec/templates/)
+        #[arg(short, long)]
+        template: Option<String>,
     },
 
     /// List all specs
@@ -96,6 +99,9 @@ enum Commands {
         action: ConfigAction,
     },
 
+    /// List available spec templates
+    Templates,
+
     /// Launch a real-time TUI dashboard showing spec progress
     Dashboard,
 }
@@ -125,7 +131,10 @@ fn main() {
 
     let result = match cli.command {
         Commands::Init { force } => spec::init(force),
-        Commands::New { spec_name } => spec::new_spec(&spec_name),
+        Commands::New {
+            spec_name,
+            template,
+        } => spec::new_spec(&spec_name, template.as_deref()),
         Commands::List => spec::list(),
         Commands::View { spec_name } => spec::view(&spec_name),
         Commands::Edit { spec_name } => spec::edit(&spec_name),
@@ -145,6 +154,7 @@ fn main() {
             ConfigAction::List => spec::config_list(),
             ConfigAction::Remove { repo_name } => spec::config_remove(&repo_name),
         },
+        Commands::Templates => spec::list_templates(),
         Commands::Dashboard => spec::dashboard::run(),
     };
 
