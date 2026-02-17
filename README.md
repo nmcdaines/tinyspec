@@ -139,3 +139,9 @@ Install your local build:
 ```sh
 cargo install --path .
 ```
+
+Install git hooks (runs `cargo fmt`, `cargo clippy --fix`, and `cargo test` before each commit):
+
+```sh
+./scripts/install-hooks.sh
+```

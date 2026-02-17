@@ -193,7 +193,11 @@ fn t5_view_nonexistent_spec() {
 #[test]
 fn t6_delete_spec() {
     let dir = TempDir::new().unwrap();
-    create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &sample_spec_content());
+    create_sample_spec(
+        &dir,
+        "2025-02-17-09-36-hello-world.md",
+        &sample_spec_content(),
+    );
 
     // Confirm deletion by piping "y" to stdin
     tinyspec(&dir)
@@ -203,10 +207,11 @@ fn t6_delete_spec() {
         .success()
         .stdout(predicate::str::contains("Deleted"));
 
-    assert!(!dir
-        .path()
-        .join(".specs/2025-02-17-09-36-hello-world.md")
-        .exists());
+    assert!(
+        !dir.path()
+            .join(".specs/2025-02-17-09-36-hello-world.md")
+            .exists()
+    );
 }
 
 // ─── T.7: Check a task ──────────────────────────────────────────────────────
@@ -214,7 +219,11 @@ fn t6_delete_spec() {
 #[test]
 fn t7_check_task() {
     let dir = TempDir::new().unwrap();
-    create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &sample_spec_content());
+    create_sample_spec(
+        &dir,
+        "2025-02-17-09-36-hello-world.md",
+        &sample_spec_content(),
+    );
 
     tinyspec(&dir)
         .args(["check", "hello-world", "A"])
@@ -222,10 +231,8 @@ fn t7_check_task() {
         .success()
         .stdout(predicate::str::contains("Checked task A"));
 
-    let content = fs::read_to_string(
-        dir.path().join(".specs/2025-02-17-09-36-hello-world.md"),
-    )
-    .unwrap();
+    let content =
+        fs::read_to_string(dir.path().join(".specs/2025-02-17-09-36-hello-world.md")).unwrap();
     assert!(content.contains("- [x] A: Do this"));
     // Other tasks untouched
     assert!(content.contains("- [ ] A.1: Do this subtask"));
@@ -246,10 +253,8 @@ fn t8_uncheck_task() {
         .success()
         .stdout(predicate::str::contains("Unchecked task B"));
 
-    let content = fs::read_to_string(
-        dir.path().join(".specs/2025-02-17-09-36-hello-world.md"),
-    )
-    .unwrap();
+    let content =
+        fs::read_to_string(dir.path().join(".specs/2025-02-17-09-36-hello-world.md")).unwrap();
     assert!(content.contains("- [ ] B: Do that"));
 }
 
@@ -258,7 +263,11 @@ fn t8_uncheck_task() {
 #[test]
 fn t9_check_invalid_task_id() {
     let dir = TempDir::new().unwrap();
-    create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &sample_spec_content());
+    create_sample_spec(
+        &dir,
+        "2025-02-17-09-36-hello-world.md",
+        &sample_spec_content(),
+    );
 
     tinyspec(&dir)
         .args(["check", "hello-world", "Z"])
@@ -443,7 +452,8 @@ No blank line after heading.
         .success()
         .stdout(predicate::str::contains("Formatted"));
 
-    let formatted = fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-messy.md")).unwrap();
+    let formatted =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-messy.md")).unwrap();
 
     // Headings should be present
     assert!(formatted.contains("# Background"));
@@ -456,10 +466,7 @@ No blank line after heading.
     assert!(formatted.contains("- [ ] A: First task"));
 
     // Formatting is idempotent: running again produces the same output
-    tinyspec(&dir)
-        .args(["format", "messy"])
-        .assert()
-        .success();
+    tinyspec(&dir).args(["format", "messy"]).assert().success();
     let second = fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-messy.md")).unwrap();
     assert_eq!(formatted, second, "Formatter is not idempotent");
 }
@@ -496,7 +503,9 @@ Some text.
         fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-fm-test.md")).unwrap();
 
     // Front matter must be preserved exactly
-    assert!(formatted.starts_with("---\ntinySpec: v0\ntitle: Front Matter Test\napplications:\n    - my-app\n---\n"));
+    assert!(formatted.starts_with(
+        "---\ntinySpec: v0\ntitle: Front Matter Test\napplications:\n    - my-app\n---\n"
+    ));
 }
 
 // ─── T.17: Format --all formats all specs ───────────────────────────────────
@@ -520,8 +529,12 @@ fn t17_format_all_specs() {
         .args(["format", "--all"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("Formatted 2025-01-01-10-00-alpha.md"))
-        .stdout(predicate::str::contains("Formatted 2025-02-01-10-00-beta.md"));
+        .stdout(predicate::str::contains(
+            "Formatted 2025-01-01-10-00-alpha.md",
+        ))
+        .stdout(predicate::str::contains(
+            "Formatted 2025-02-01-10-00-beta.md",
+        ));
 }
 
 // ─── T.18: New spec is auto-formatted ───────────────────────────────────────
@@ -530,10 +543,7 @@ fn t17_format_all_specs() {
 fn t18_new_spec_is_auto_formatted() {
     let dir = TempDir::new().unwrap();
 
-    tinyspec(&dir)
-        .args(["new", "auto-fmt"])
-        .assert()
-        .success();
+    tinyspec(&dir).args(["new", "auto-fmt"]).assert().success();
 
     let specs = dir.path().join(".specs");
     let entry = fs::read_dir(&specs)
@@ -659,7 +669,11 @@ fn t23_view_resolves_applications() {
     )
     .unwrap();
 
-    create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &sample_spec_content());
+    create_sample_spec(
+        &dir,
+        "2025-02-17-09-36-hello-world.md",
+        &sample_spec_content(),
+    );
 
     let output = tinyspec(&dir)
         .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
@@ -682,7 +696,11 @@ fn t24_view_errors_when_config_missing() {
     let dir = TempDir::new().unwrap();
     let config_dir = dir.path().join(".nonexistent-config");
 
-    create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &sample_spec_content());
+    create_sample_spec(
+        &dir,
+        "2025-02-17-09-36-hello-world.md",
+        &sample_spec_content(),
+    );
 
     tinyspec(&dir)
         .env("TINYSPEC_HOME", config_dir.to_str().unwrap())
@@ -707,7 +725,11 @@ fn t25_view_errors_when_app_unmapped() {
     )
     .unwrap();
 
-    create_sample_spec(&dir, "2025-02-17-09-36-hello-world.md", &sample_spec_content());
+    create_sample_spec(
+        &dir,
+        "2025-02-17-09-36-hello-world.md",
+        &sample_spec_content(),
+    );
 
     tinyspec(&dir)
         .env("TINYSPEC_HOME", config_dir.to_str().unwrap())

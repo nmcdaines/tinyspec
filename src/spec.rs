@@ -39,11 +39,10 @@ fn find_spec(name: &str) -> Result<PathBuf, String> {
     for entry in entries {
         let entry = entry.map_err(|e| format!("Failed to read directory entry: {e}"))?;
         let filename = entry.file_name().to_string_lossy().to_string();
-        if let Some(spec_name) = extract_spec_name(&filename) {
-            if spec_name == name {
+        if let Some(spec_name) = extract_spec_name(&filename)
+            && spec_name == name {
                 matches.push(entry.path());
             }
-        }
     }
 
     match matches.len() {
@@ -73,7 +72,7 @@ pub fn complete_spec_names(current: &std::ffi::OsStr) -> Vec<CompletionCandidate
             extract_spec_name(&filename).map(|name| name.to_string())
         })
         .filter(|name| name.starts_with(current.as_ref()))
-        .map(|name| CompletionCandidate::new(name))
+        .map(CompletionCandidate::new)
         .collect()
 }
 
@@ -109,7 +108,8 @@ fn config_path() -> Result<PathBuf, String> {
     if let Ok(dir) = std::env::var("TINYSPEC_HOME") {
         return Ok(PathBuf::from(dir).join("config.yaml"));
     }
-    let home = std::env::var("HOME").map_err(|_| "HOME environment variable not set".to_string())?;
+    let home =
+        std::env::var("HOME").map_err(|_| "HOME environment variable not set".to_string())?;
     Ok(PathBuf::from(home).join(".tinyspec").join("config.yaml"))
 }
 
@@ -151,9 +151,7 @@ pub fn config_list() -> Result<(), String> {
     let config = load_config()?;
     if config.repositories.is_empty() {
         println!("No repositories configured.");
-        println!(
-            "Use `tinyspec config set <repo-name> <path>` to add a repository mapping."
-        );
+        println!("Use `tinyspec config set <repo-name> <path>` to add a repository mapping.");
         return Ok(());
     }
     for (name, path) in &config.repositories {
@@ -179,12 +177,11 @@ pub fn config_remove(name: &str) -> Result<(), String> {
 /// Split YAML front matter from the Markdown body.
 /// Returns (front_matter_block_including_delimiters, body).
 fn split_front_matter(content: &str) -> (Option<&str>, &str) {
-    if let Some(rest) = content.strip_prefix("---\n") {
-        if let Some(end) = rest.find("\n---\n") {
+    if let Some(rest) = content.strip_prefix("---\n")
+        && let Some(end) = rest.find("\n---\n") {
             let split = "---\n".len() + end + "\n---\n".len();
             return (Some(&content[..split]), &content[split..]);
         }
-    }
     (None, content)
 }
 
@@ -272,11 +269,10 @@ pub fn format_all_specs() -> Result<(), String> {
     }
 
     for entry in &entries {
-        let content = fs::read_to_string(entry.path())
-            .map_err(|e| format!("Failed to read spec: {e}"))?;
+        let content =
+            fs::read_to_string(entry.path()).map_err(|e| format!("Failed to read spec: {e}"))?;
         let formatted = format_markdown(&content)?;
-        fs::write(entry.path(), &formatted)
-            .map_err(|e| format!("Failed to write spec: {e}"))?;
+        fs::write(entry.path(), &formatted).map_err(|e| format!("Failed to write spec: {e}"))?;
         println!("Formatted {}", entry.file_name().to_string_lossy());
     }
 
@@ -512,20 +508,18 @@ pub fn check_task(name: &str, task_id: &str, check: bool) -> Result<(), String> 
     for line in &mut lines {
         let trimmed = line.trim();
         if check {
-            if let Some(after) = trimmed.strip_prefix("- [ ] ") {
-                if after.starts_with(&target) {
+            if let Some(after) = trimmed.strip_prefix("- [ ] ")
+                && after.starts_with(&target) {
                     *line = line.replacen("- [ ] ", "- [x] ", 1);
                     found = true;
                     break;
                 }
-            }
-        } else if let Some(after) = trimmed.strip_prefix("- [x] ") {
-            if after.starts_with(&target) {
+        } else if let Some(after) = trimmed.strip_prefix("- [x] ")
+            && after.starts_with(&target) {
                 *line = line.replacen("- [x] ", "- [ ] ", 1);
                 found = true;
                 break;
             }
-        }
     }
 
     if !found {

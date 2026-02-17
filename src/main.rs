@@ -6,7 +6,11 @@ use clap_complete::engine::ArgValueCompleter;
 mod spec;
 
 #[derive(Parser)]
-#[command(name = "tinyspec", version, about = "A tiny framework for writing specs")]
+#[command(
+    name = "tinyspec",
+    version,
+    about = "A tiny framework for writing specs"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

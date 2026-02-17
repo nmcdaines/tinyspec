@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -e
+
+echo "Running pre-commit checks..."
+
+# Run cargo fmt (auto-fix)
+echo "  Formatting..."
+cargo fmt
+
+# Run cargo clippy with auto-fix
+echo "  Running clippy..."
+cargo clippy --fix --allow-dirty --allow-staged 2>/dev/null
+
+# Re-stage any files modified by fmt/clippy
+echo "  Re-staging modified files..."
+git diff --name-only | xargs -r git add
+
+# Run tests
+echo "  Running tests..."
+cargo test --quiet
+
+echo "All pre-commit checks passed."
