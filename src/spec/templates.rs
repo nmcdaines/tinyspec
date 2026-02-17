@@ -248,3 +248,87 @@ pub fn list_templates() -> Result<(), String> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn vars() -> HashMap<&'static str, &'static str> {
+        HashMap::from([("title", "My Feature"), ("date", "2026-02-18")])
+    }
+
+    #[test]
+    fn double_brace_title() {
+        assert_eq!(
+            substitute_variables("title: {{title}}", &vars()),
+            "title: My Feature"
+        );
+    }
+
+    #[test]
+    fn dollar_brace_title() {
+        assert_eq!(
+            substitute_variables("title: ${title}", &vars()),
+            "title: My Feature"
+        );
+    }
+
+    #[test]
+    fn double_brace_date() {
+        assert_eq!(
+            substitute_variables("Created on {{date}}.", &vars()),
+            "Created on 2026-02-18."
+        );
+    }
+
+    #[test]
+    fn dollar_brace_date() {
+        assert_eq!(
+            substitute_variables("Created on ${date}.", &vars()),
+            "Created on 2026-02-18."
+        );
+    }
+
+    #[test]
+    fn fenced_code_block_not_substituted() {
+        let input = "before\n```\n{{title}} and ${date}\n```\nafter {{title}}";
+        let result = substitute_variables(input, &vars());
+        assert_eq!(
+            result,
+            "before\n```\n{{title}} and ${date}\n```\nafter My Feature"
+        );
+    }
+
+    #[test]
+    fn inline_code_not_substituted() {
+        let input = "Use `{{title}}` in your template. Real: {{title}}";
+        let result = substitute_variables(input, &vars());
+        assert_eq!(result, "Use `{{title}}` in your template. Real: My Feature");
+    }
+
+    #[test]
+    fn undefined_variables_left_as_is() {
+        let input = "{{title}} and {{unknown}} and ${nope}";
+        let result = substitute_variables(input, &vars());
+        assert_eq!(result, "My Feature and {{unknown}} and ${nope}");
+    }
+
+    #[test]
+    fn mixed_syntax_in_one_template() {
+        let input = "---\ntitle: {{title}}\n---\nDate: ${date}\n";
+        let result = substitute_variables(input, &vars());
+        assert_eq!(result, "---\ntitle: My Feature\n---\nDate: 2026-02-18\n");
+    }
+
+    #[test]
+    fn no_variables_passes_through() {
+        let input = "Plain text with no variables.";
+        assert_eq!(substitute_variables(input, &vars()), input);
+    }
+
+    #[test]
+    fn empty_braces_left_as_is() {
+        let input = "{{}} and ${}";
+        assert_eq!(substitute_variables(input, &vars()), input);
+    }
+}

@@ -1468,6 +1468,137 @@ applications:
     assert!(updated.contains("- [ ] \u{1F9EA}: Testing tasks"));
 }
 
+// ─── T.47: Template substitutes ${var} syntax ─────────────────────────────────
+
+#[test]
+fn t47_template_substitutes_dollar_brace() {
+    let dir = TempDir::new().unwrap();
+    let templates_dir = dir.path().join(".specs/templates");
+    fs::create_dir_all(&templates_dir).unwrap();
+    fs::write(
+        templates_dir.join("dollar.md"),
+        "\
+---
+tinySpec: v0
+title: ${title}
+applications:
+    -
+---
+
+# Background
+
+Created on ${date}.
+
+# Proposal
+
+
+
+# Implementation Plan
+
+
+
+# Test Plan
+
+",
+    )
+    .unwrap();
+
+    tinyspec(&dir)
+        .args(["new", "dollar-test", "--template", "dollar"])
+        .assert()
+        .success();
+
+    let specs = dir.path().join(".specs");
+    let entries: Vec<_> = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_file())
+        .collect();
+
+    let content = fs::read_to_string(entries[0].path()).unwrap();
+    assert!(
+        content.contains("title: Dollar Test"),
+        "Title should be substituted via ${{}} syntax"
+    );
+    assert!(
+        !content.contains("${date}"),
+        "${{date}} placeholder should be replaced"
+    );
+    assert!(
+        content.contains("Created on 20"),
+        "Should contain a date starting with 20xx"
+    );
+}
+
+// ─── T.48: Variables inside code blocks are not substituted ───────────────────
+
+#[test]
+fn t48_template_code_blocks_protected() {
+    let dir = TempDir::new().unwrap();
+    let templates_dir = dir.path().join(".specs/templates");
+    fs::create_dir_all(&templates_dir).unwrap();
+    fs::write(
+        templates_dir.join("codeblock.md"),
+        "\
+---
+tinySpec: v0
+title: {{title}}
+applications:
+    -
+---
+
+# Background
+
+Use `{{title}}` in your template.
+
+```
+{{title}} should not be replaced here.
+```
+
+But {{title}} should be replaced here.
+
+# Proposal
+
+
+
+# Implementation Plan
+
+
+
+# Test Plan
+
+",
+    )
+    .unwrap();
+
+    tinyspec(&dir)
+        .args(["new", "code-test", "--template", "codeblock"])
+        .assert()
+        .success();
+
+    let specs = dir.path().join(".specs");
+    let entries: Vec<_> = fs::read_dir(&specs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_file())
+        .collect();
+
+    let content = fs::read_to_string(entries[0].path()).unwrap();
+    assert!(
+        content.contains("title: Code Test"),
+        "Title in front matter should be substituted"
+    );
+    assert!(
+        content.contains("But Code Test should be replaced here."),
+        "Variable outside code blocks should be substituted"
+    );
+    // Inline code should be protected
+    assert!(
+        content.contains("`{{title}}`"),
+        "Variable inside inline code should NOT be substituted"
+    );
+}
+
 // ─── T.46: Format preserves emoji task IDs ───────────────────────────────────
 
 #[test]
