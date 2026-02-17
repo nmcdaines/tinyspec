@@ -1,6 +1,6 @@
 # TinySpec
 
-A tiny framework for writing specs for use with language models. Tinyspec integrates with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) to provide a structured workflow for planning, refining, and implementing features.
+A tiny framework for writing specs for use with language models. Tinyspec integrates with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) to provide a structured workflow for planning, refining, and implementing features. It supports multi-repo projects and spec grouping to keep larger efforts organized.
 
 ## Install
 
@@ -52,6 +52,20 @@ This creates a timestamped Markdown file in `.specs/` with sections for Backgrou
 
 ```sh
 tinyspec edit my-feature
+```
+
+To organize specs into a group, use the `group/name` syntax:
+
+```sh
+tinyspec new v1/my-feature
+```
+
+This creates the spec inside `.specs/v1/`. Groups are optional and only one level deep. Spec names must be globally unique across all groups, so every command can reference a spec by name alone:
+
+```sh
+tinyspec view my-feature    # works whether grouped or not
+tinyspec edit my-feature
+tinyspec status my-feature
 ```
 
 ### 3. Refine with Claude
