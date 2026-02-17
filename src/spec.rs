@@ -603,23 +603,40 @@ fn print_status(name: &str, content: &str) {
 // ---------------------------------------------------------------------------
 
 pub fn init(force: bool) -> Result<(), String> {
-    let commands_dir = Path::new(".claude/commands");
-    fs::create_dir_all(commands_dir)
-        .map_err(|e| format!("Failed to create .claude/commands/ directory: {e}"))?;
+    // Remove legacy .claude/commands/tinyspec*.md files when --force is used
+    if force {
+        let commands_dir = Path::new(".claude/commands");
+        if commands_dir.is_dir()
+            && let Ok(entries) = fs::read_dir(commands_dir) {
+                for entry in entries.flatten() {
+                    let name = entry.file_name();
+                    let name = name.to_string_lossy();
+                    if name.starts_with("tinyspec") && name.ends_with(".md")
+                        && fs::remove_file(entry.path()).is_ok() {
+                            println!("Removed legacy .claude/commands/{name}");
+                        }
+                }
+            }
+    }
 
+    let skills_dir = Path::new(".claude/skills");
     let skills: &[(&str, &str)] = &[
-        ("tinyspec:refine.md", TINYSPEC_REFINE_SKILL),
-        ("tinyspec:work.md", TINYSPEC_WORK_SKILL),
-        ("tinyspec:task.md", TINYSPEC_TASK_SKILL),
+        ("tinyspec-refine", TINYSPEC_REFINE_SKILL),
+        ("tinyspec-work", TINYSPEC_WORK_SKILL),
+        ("tinyspec-task", TINYSPEC_TASK_SKILL),
     ];
 
-    for (filename, content) in skills {
-        let path = commands_dir.join(filename);
+    for (skill_name, content) in skills {
+        let dir = skills_dir.join(skill_name);
+        fs::create_dir_all(&dir)
+            .map_err(|e| format!("Failed to create .claude/skills/{skill_name}/ directory: {e}"))?;
+        let path = dir.join("SKILL.md");
         if !force && path.exists() {
-            println!("Skipped {filename} (already exists)");
+            println!("Skipped {skill_name}/SKILL.md (already exists)");
         } else {
-            fs::write(&path, content).map_err(|e| format!("Failed to write {filename}: {e}"))?;
-            println!("Created {filename}");
+            fs::write(&path, content)
+                .map_err(|e| format!("Failed to write {skill_name}/SKILL.md: {e}"))?;
+            println!("Created {skill_name}/SKILL.md");
         }
     }
 
