@@ -6,7 +6,7 @@ use chrono::Local;
 
 use super::config::{config_path, load_config};
 use super::format::format_file;
-use super::templates::{collect_templates, find_template};
+use super::templates::{collect_templates, find_template, substitute_variables};
 use super::{
     collect_spec_files, extract_spec_name, find_spec, parse_front_matter, parse_spec_input,
     specs_dir,
@@ -70,11 +70,14 @@ pub fn new_spec(input: &str, template_name: Option<&str>) -> Result<(), String> 
         }
     };
 
+    let vars =
+        std::collections::HashMap::from([("title", title.as_str()), ("date", date.as_str())]);
+
     let content = match template {
         Some(t) => {
             let raw = fs::read_to_string(&t.path)
                 .map_err(|e| format!("Failed to read template '{}': {e}", t.name))?;
-            raw.replace("{{title}}", &title).replace("{{date}}", &date)
+            substitute_variables(&raw, &vars)
         }
         None => {
             format!(

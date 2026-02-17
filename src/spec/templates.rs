@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt;
 use std::fs;
 use std::path::PathBuf;
@@ -102,6 +103,124 @@ pub fn find_template(name: &str) -> Result<TemplateInfo, String> {
         .into_iter()
         .find(|t| t.name == name)
         .ok_or_else(|| format!("No template found matching '{name}'"))
+}
+
+/// Substitute template variables in the given content.
+///
+/// Supports both `{{var}}` and `${var}` syntax. Variables inside fenced code
+/// blocks (``` ... ```) and inline code (` ... `) are left untouched.
+/// Unknown variables are left as-is.
+pub fn substitute_variables(content: &str, vars: &HashMap<&str, &str>) -> String {
+    let mut result = String::with_capacity(content.len());
+    let chars: Vec<char> = content.chars().collect();
+    let len = chars.len();
+    let mut i = 0;
+
+    // Track whether we're inside a fenced code block
+    let mut in_fenced_block = false;
+
+    while i < len {
+        // Check for fenced code block delimiter at start of line
+        if (i == 0 || chars[i - 1] == '\n')
+            && i + 2 < len
+            && chars[i] == '`'
+            && chars[i + 1] == '`'
+            && chars[i + 2] == '`'
+        {
+            in_fenced_block = !in_fenced_block;
+            // Copy the entire line including the backticks
+            result.push(chars[i]);
+            i += 1;
+            continue;
+        }
+
+        // Inside a fenced code block, copy everything verbatim
+        if in_fenced_block {
+            result.push(chars[i]);
+            i += 1;
+            continue;
+        }
+
+        // Check for inline code (backtick)
+        if chars[i] == '`' {
+            result.push('`');
+            i += 1;
+            // Copy until closing backtick or end of input
+            while i < len && chars[i] != '`' {
+                result.push(chars[i]);
+                i += 1;
+            }
+            if i < len {
+                result.push('`');
+                i += 1;
+            }
+            continue;
+        }
+
+        // Check for {{var}} syntax
+        if i + 3 < len && chars[i] == '{' && chars[i + 1] == '{'
+            && let Some((name, end)) = extract_var_name(&chars, i + 2, '}', '}')
+                && let Some(value) = vars.get(name.as_str()) {
+                    result.push_str(value);
+                    i = end;
+                    continue;
+                }
+
+        // Check for ${var} syntax
+        if i + 2 < len && chars[i] == '$' && chars[i + 1] == '{'
+            && let Some((name, end)) = extract_var_name(&chars, i + 2, '}', '\0')
+                && let Some(value) = vars.get(name.as_str()) {
+                    result.push_str(value);
+                    i = end;
+                    continue;
+                }
+
+        result.push(chars[i]);
+        i += 1;
+    }
+
+    result
+}
+
+/// Extract a variable name starting at position `start` in `chars`.
+/// For `{{var}}`, close1='}' and close2='}' — expects two closing braces.
+/// For `${var}`, close1='}' and close2='\0' — expects one closing brace.
+/// Returns the variable name and the position after the closing delimiter.
+fn extract_var_name(
+    chars: &[char],
+    start: usize,
+    close1: char,
+    close2: char,
+) -> Option<(String, usize)> {
+    let mut j = start;
+    let len = chars.len();
+
+    // Collect alphanumeric/underscore characters
+    while j < len && (chars[j].is_alphanumeric() || chars[j] == '_') {
+        j += 1;
+    }
+
+    // Must have at least one character
+    if j == start {
+        return None;
+    }
+
+    // Check closing delimiter
+    if close2 != '\0' {
+        // Double-char close: }}
+        if j + 1 < len && chars[j] == close1 && chars[j + 1] == close2 {
+            let name: String = chars[start..j].iter().collect();
+            return Some((name, j + 2));
+        }
+    } else {
+        // Single-char close: }
+        if j < len && chars[j] == close1 {
+            let name: String = chars[start..j].iter().collect();
+            return Some((name, j + 1));
+        }
+    }
+
+    None
 }
 
 /// List all available templates, showing name and source.
