@@ -1,3 +1,5 @@
+IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
+
 Read the tinyspec specification at `.specs/$ARGUMENTS.md` (resolve the name by matching the suffix after the timestamp prefix, e.g., `hello-world` matches `2025-02-17-09-36-hello-world.md`).
 
 If no matching spec is found, list available specs with `tinyspec list` and ask the user which one they meant.
@@ -5,7 +7,7 @@ If no matching spec is found, list available specs with `tinyspec list` and ask 
 Your goal is to collaborate with the user to refine this spec:
 
 1. Read and understand the spec's Background and Proposal sections.
-2. Ask clarifying questions about ambiguous requirements or missing context.
+2. Ask clarifying questions about ambiguous requirements or missing context. Use the `AskUserQuestion` tool to present structured, selectable options rather than asking inline.
 3. Suggest improvements to the Background and Proposal sections.
 4. Once the user is satisfied with the problem definition, scaffold or update the **Implementation Plan**:
    - Break the work into logical task groups (A, B, C, ...)
