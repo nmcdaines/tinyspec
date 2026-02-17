@@ -8,8 +8,8 @@ use super::config::{config_path, load_config};
 use super::format::format_file;
 use super::templates::{collect_templates, find_template, substitute_variables};
 use super::{
-    collect_spec_files, extract_spec_name, find_spec, parse_front_matter, parse_spec_input,
-    specs_dir,
+    TIMESTAMP_PREFIX_LEN, collect_spec_files, extract_spec_name, find_spec, parse_front_matter,
+    parse_spec_input, specs_dir,
 };
 
 pub fn new_spec(input: &str, template_name: Option<&str>) -> Result<(), String> {
@@ -35,13 +35,29 @@ pub fn new_spec(input: &str, template_name: Option<&str>) -> Result<(), String> 
     fs::create_dir_all(&dir)
         .map_err(|e| format!("Failed to create {} directory: {e}", dir.display()))?;
 
-    let timestamp = Local::now().format("%Y-%m-%d-%H-%M");
+    // Find a unique timestamp prefix, incrementing by 1 minute on conflict
+    let existing_prefixes: Vec<String> = existing
+        .iter()
+        .filter_map(|p| {
+            p.file_name()
+                .and_then(|f| f.to_str())
+                .filter(|f| f.len() >= TIMESTAMP_PREFIX_LEN)
+                .map(|f| f[..TIMESTAMP_PREFIX_LEN].to_string())
+        })
+        .collect();
+
+    let mut ts = Local::now();
+    loop {
+        let prefix = format!("{}-", ts.format("%Y-%m-%d-%H-%M"));
+        if !existing_prefixes.contains(&prefix) {
+            break;
+        }
+        ts += chrono::Duration::minutes(1);
+    }
+
+    let timestamp = ts.format("%Y-%m-%d-%H-%M");
     let filename = format!("{timestamp}-{name}.md");
     let path = dir.join(&filename);
-
-    if path.exists() {
-        return Err(format!("Spec file already exists: {filename}"));
-    }
 
     // Title-case the kebab-case name
     let title: String = name
