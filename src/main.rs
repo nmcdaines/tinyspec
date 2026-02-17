@@ -95,6 +95,9 @@ enum Commands {
         #[command(subcommand)]
         action: ConfigAction,
     },
+
+    /// Launch a real-time TUI dashboard showing spec progress
+    Dashboard,
 }
 
 #[derive(Subcommand)]
@@ -142,6 +145,7 @@ fn main() {
             ConfigAction::List => spec::config_list(),
             ConfigAction::Remove { repo_name } => spec::config_remove(&repo_name),
         },
+        Commands::Dashboard => spec::dashboard::run(),
     };
 
     if let Err(e) = result {
