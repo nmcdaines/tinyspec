@@ -1,3 +1,84 @@
 # Getting Started
 
-Placeholder content.
+tinyspec is a tiny framework for spec-driven development with Claude Code. You write structured specifications, refine them collaboratively with AI, then implement them task by task — with progress tracked automatically.
+
+## Install
+
+tinyspec is distributed as a Rust binary via [crates.io](https://crates.io/crates/tinyspec).
+
+```
+cargo install tinyspec
+```
+
+## Initialize a project
+
+Run `tinyspec init` in any repository to set up Claude Code skills:
+
+```
+cd your-project
+tinyspec init
+```
+
+This creates skill files under `.claude/skills/` and prints instructions for enabling shell tab completions.
+
+## Create your first spec
+
+```
+tinyspec new my-feature
+```
+
+This creates a timestamped Markdown file in `.specs/`:
+
+```
+.specs/2026-02-18-14-30-my-feature.md
+```
+
+The file contains a skeleton with four sections: Background, Proposal, Implementation Plan, and Test Plan.
+
+## Refine with Claude Code
+
+Open Claude Code and use the refine skill:
+
+```
+/tinyspec-refine my-feature
+```
+
+Claude will read the spec, ask clarifying questions, suggest improvements to the Background and Proposal, and then scaffold an Implementation Plan broken into task groups (A, B, C...) with subtasks (A.1, A.2...).
+
+## Implement
+
+Once the plan is ready, hand it off:
+
+```
+/tinyspec-work my-feature
+```
+
+Claude works through each task group in order — implementing subtasks, checking them off, verifying the build, and committing after each group completes.
+
+You can also implement a single task:
+
+```
+/tinyspec-task my-feature A.1
+```
+
+## Track progress
+
+Check status from the command line:
+
+```
+tinyspec status my-feature
+```
+
+Or launch the interactive dashboard:
+
+```
+tinyspec dashboard
+```
+
+The dashboard shows all specs with progress bars, status icons, and a detail view for each spec's tasks.
+
+## What's next
+
+- [Concepts](/docs/concepts) — understand spec structure, task groups, and the spec lifecycle
+- [CLI Reference](/docs/cli-reference) — full command reference
+- [Claude Code Integration](/docs/claude-code) — learn about the three skills

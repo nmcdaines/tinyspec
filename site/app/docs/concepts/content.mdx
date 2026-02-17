@@ -1,0 +1,103 @@
+# Concepts
+
+## Spec structure
+
+Every tinyspec specification is a Markdown file with YAML front matter and four sections.
+
+### Front matter
+
+```yaml
+---
+tinySpec: v0
+title: My Feature
+applications:
+  - my-app
+---
+```
+
+| Field | Description |
+| --- | --- |
+| `tinySpec` | Format version (currently `v0`) |
+| `title` | Human-readable title, auto-generated from the spec name |
+| `applications` | List of repository names for multi-repo specs (optional) |
+
+### Background
+
+Context on the domain and the problem you're solving. This section is written by you and helps Claude understand *why* the work is needed.
+
+### Proposal
+
+A description of the proposed changes — what will be built or changed. Write this with enough detail that someone could review and approve the approach.
+
+### Implementation Plan
+
+A structured checklist of work. This is typically scaffolded by the `/tinyspec-refine` skill and then reviewed by you.
+
+```markdown
+- [ ] A: Set up database schema
+  - [ ] A.1: Create users table migration
+  - [ ] A.2: Add indexes for email and username
+- [ ] B: Implement API endpoints
+  - [ ] B.1: POST /users endpoint
+  - [ ] B.2: GET /users/:id endpoint
+```
+
+### Test Plan
+
+An optional section for test cases using Given/When/Then syntax:
+
+```markdown
+- [ ] T.1: User creation
+  - **Given** no user with email "test@example.com" exists
+  - **When** POST /users is called with valid data
+  - **Then** a 201 response is returned
+  - **And** the user appears in the database
+```
+
+## Task groups and subtasks
+
+Work in the Implementation Plan is organized into **task groups** identified by letters (A, B, C...) and **subtasks** using dotted notation (A.1, A.2, A.3...).
+
+Task groups represent logical units of work — typically a feature, a layer, or a phase. Subtasks break each group into individual steps. The `/tinyspec-work` skill implements groups in order, committing after each group completes.
+
+### Task ID format
+
+- Top-level: a single letter — `A`, `B`, `C`
+- Subtasks: letter dot number — `A.1`, `A.2`, `B.1`
+- The colon after the ID is required: `- [ ] A.1: Description`
+
+## Spec lifecycle
+
+A spec typically moves through these phases:
+
+1. **Create** — `tinyspec new my-feature` scaffolds the file
+2. **Define** — you write the Background and Proposal
+3. **Refine** — `/tinyspec-refine` asks questions, suggests improvements, and builds the Implementation Plan
+4. **Implement** — `/tinyspec-work` or `/tinyspec-task` executes the plan
+5. **Complete** — all tasks checked off, code committed
+
+You can iterate between phases. Running `/tinyspec-refine` again updates the plan. Tasks can be unchecked with `tinyspec uncheck` to redo work.
+
+## Spec organization
+
+Specs live in the `.specs/` directory at the root of your repository. Filenames include a timestamp prefix:
+
+```
+.specs/2026-02-18-14-30-my-feature.md
+```
+
+You can organize specs into groups using subdirectories:
+
+```
+.specs/v1/2026-02-18-14-30-auth.md
+.specs/v1/2026-02-18-15-00-dashboard.md
+.specs/v2/2026-02-19-09-00-redesign.md
+```
+
+Create a grouped spec with slash notation:
+
+```
+tinyspec new v1/auth
+```
+
+Spec names must be globally unique across all groups.
