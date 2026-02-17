@@ -10,8 +10,15 @@ export default function Header() {
             v0.0.7
           </span>
         </div>
-        <a
-          href="https://github.com/nmcdaines/tinyspec"
+        <div className="flex items-center gap-4">
+          <a
+            href="/docs/getting-started"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Docs
+          </a>
+          <a
+            href="https://github.com/nmcdaines/tinyspec"
           target="_blank"
           rel="noopener noreferrer"
           className="text-muted transition-colors hover:text-foreground"
@@ -30,6 +37,7 @@ export default function Header() {
             />
           </svg>
         </a>
+        </div>
       </div>
     </header>
   );
