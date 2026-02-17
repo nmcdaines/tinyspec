@@ -81,6 +81,30 @@ enum Commands {
         #[arg(add = ArgValueCompleter::new(spec::complete_spec_names))]
         spec_name: Option<String>,
     },
+
+    /// Manage repository configuration (~/.tinyspec/config.yaml)
+    Config {
+        #[command(subcommand)]
+        action: ConfigAction,
+    },
+}
+
+#[derive(Subcommand)]
+enum ConfigAction {
+    /// Map a repository name to a folder path
+    Set {
+        /// Repository name
+        repo_name: String,
+        /// Folder path
+        path: String,
+    },
+    /// List all repository mappings
+    List,
+    /// Remove a repository mapping
+    Remove {
+        /// Repository name
+        repo_name: String,
+    },
 }
 
 fn main() {
@@ -105,6 +129,11 @@ fn main() {
             }
         }
         Commands::Status { spec_name } => spec::status(spec_name.as_deref()),
+        Commands::Config { action } => match action {
+            ConfigAction::Set { repo_name, path } => spec::config_set(&repo_name, &path),
+            ConfigAction::List => spec::config_list(),
+            ConfigAction::Remove { repo_name } => spec::config_remove(&repo_name),
+        },
     };
 
     if let Err(e) = result {
