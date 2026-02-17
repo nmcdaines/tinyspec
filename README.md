@@ -24,19 +24,19 @@ Tinyspec follows a spec-driven workflow: create a spec, refine it with Claude, t
 
 ### 1. Initialize
 
-Run `tinyspec init` in your project directory to install Claude Code slash commands and set up shell completions:
+Run `tinyspec init` in your project directory to install Claude Code skills and set up shell completions:
 
 ```sh
 cd your-project
 tinyspec init
 ```
 
-This creates three slash commands in `.claude/commands/`:
+This creates three skills in `.claude/skills/`:
 - `/tinyspec:refine` — Collaborate with Claude to define the problem and build an implementation plan
 - `/tinyspec:work` — Work through the implementation plan task by task
 - `/tinyspec:task` — Complete a specific task from the plan
 
-To update the slash commands after upgrading tinyspec:
+To update the skills after upgrading tinyspec:
 
 ```sh
 tinyspec init --force
