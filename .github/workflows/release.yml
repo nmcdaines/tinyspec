@@ -136,7 +136,7 @@ jobs:
 
   publish:
     name: Publish to crates.io
-    needs: [check-version, test]
+    needs: [check-version, release]
     if: needs.check-version.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
