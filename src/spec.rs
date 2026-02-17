@@ -40,9 +40,10 @@ fn find_spec(name: &str) -> Result<PathBuf, String> {
         let entry = entry.map_err(|e| format!("Failed to read directory entry: {e}"))?;
         let filename = entry.file_name().to_string_lossy().to_string();
         if let Some(spec_name) = extract_spec_name(&filename)
-            && spec_name == name {
-                matches.push(entry.path());
-            }
+            && spec_name == name
+        {
+            matches.push(entry.path());
+        }
     }
 
     match matches.len() {
@@ -178,10 +179,11 @@ pub fn config_remove(name: &str) -> Result<(), String> {
 /// Returns (front_matter_block_including_delimiters, body).
 fn split_front_matter(content: &str) -> (Option<&str>, &str) {
     if let Some(rest) = content.strip_prefix("---\n")
-        && let Some(end) = rest.find("\n---\n") {
-            let split = "---\n".len() + end + "\n---\n".len();
-            return (Some(&content[..split]), &content[split..]);
-        }
+        && let Some(end) = rest.find("\n---\n")
+    {
+        let split = "---\n".len() + end + "\n---\n".len();
+        return (Some(&content[..split]), &content[split..]);
+    }
     (None, content)
 }
 
@@ -509,17 +511,19 @@ pub fn check_task(name: &str, task_id: &str, check: bool) -> Result<(), String> 
         let trimmed = line.trim();
         if check {
             if let Some(after) = trimmed.strip_prefix("- [ ] ")
-                && after.starts_with(&target) {
-                    *line = line.replacen("- [ ] ", "- [x] ", 1);
-                    found = true;
-                    break;
-                }
-        } else if let Some(after) = trimmed.strip_prefix("- [x] ")
-            && after.starts_with(&target) {
-                *line = line.replacen("- [x] ", "- [ ] ", 1);
+                && after.starts_with(&target)
+            {
+                *line = line.replacen("- [ ] ", "- [x] ", 1);
                 found = true;
                 break;
             }
+        } else if let Some(after) = trimmed.strip_prefix("- [x] ")
+            && after.starts_with(&target)
+        {
+            *line = line.replacen("- [x] ", "- [ ] ", 1);
+            found = true;
+            break;
+        }
     }
 
     if !found {
