@@ -1,0 +1,62 @@
+# Dashboard
+
+The tinyspec dashboard is an interactive terminal UI (TUI) for monitoring spec progress in real time.
+
+```
+tinyspec dashboard
+```
+
+## List view
+
+The main screen shows all specs organized into two sections:
+
+- **In Progress** — specs with at least one completed task but not all
+- **Completed** — specs where all tasks are done
+
+Each row displays:
+
+```
+● 2026-02-18 my-feature  ██████░░░░  6/10
+```
+
+- A status icon: `●` yellow (in progress), `○` gray (pending), `✓` green (complete)
+- The spec timestamp and name
+- A 10-character progress bar
+- Task completion count
+
+Specs in groups show a group header with an aggregate completion percentage.
+
+### Auto-refresh
+
+The dashboard watches the `.specs/` directory for changes and updates automatically. When you or Claude checks off tasks, the progress updates in real time.
+
+## Detail view
+
+Press Enter on any spec to open its detail view. This shows the spec's Implementation Plan with:
+
+- Top-level tasks with expand/collapse arrows and child progress counts (`[3/5]`)
+- Subtasks with checkbox indicators (`☐` unchecked, `✓` checked)
+- Unchecked tasks appear first, followed by a separator, then completed tasks
+
+Press Enter or Space on a top-level task to toggle its subtask list.
+
+## Keybindings
+
+### List view
+
+| Key | Action |
+| --- | --- |
+| `↑` / `k` | Navigate up |
+| `↓` / `j` | Navigate down |
+| `Enter` | Open detail view |
+| `q` | Quit |
+
+### Detail view
+
+| Key | Action |
+| --- | --- |
+| `↑` / `k` | Navigate up |
+| `↓` / `j` | Navigate down |
+| `Enter` / `Space` | Toggle expand/collapse |
+| `Esc` | Back to list |
+| `q` | Quit |
