@@ -604,7 +604,7 @@ fn print_status(name: &str, content: &str) {
 // Init — Claude Code skills + shell completion instructions
 // ---------------------------------------------------------------------------
 
-pub fn init() -> Result<(), String> {
+pub fn init(force: bool) -> Result<(), String> {
     let commands_dir = Path::new(".claude/commands");
     fs::create_dir_all(commands_dir)
         .map_err(|e| format!("Failed to create .claude/commands/ directory: {e}"))?;
@@ -617,7 +617,7 @@ pub fn init() -> Result<(), String> {
 
     for (filename, content) in skills {
         let path = commands_dir.join(filename);
-        if path.exists() {
+        if !force && path.exists() {
             println!("Skipped {filename} (already exists)");
         } else {
             fs::write(&path, content).map_err(|e| format!("Failed to write {filename}: {e}"))?;

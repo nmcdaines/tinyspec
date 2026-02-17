@@ -15,7 +15,11 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Set up Claude Code slash command skills and print shell completion instructions
-    Init,
+    Init {
+        /// Overwrite existing command files with the latest skill prompts
+        #[arg(short, long)]
+        force: bool,
+    },
 
     /// Create a new spec
     New {
@@ -113,7 +117,7 @@ fn main() {
     let cli = Cli::parse();
 
     let result = match cli.command {
-        Commands::Init => spec::init(),
+        Commands::Init { force } => spec::init(force),
         Commands::New { spec_name } => spec::new_spec(&spec_name),
         Commands::List => spec::list(),
         Commands::View { spec_name } => spec::view(&spec_name),
