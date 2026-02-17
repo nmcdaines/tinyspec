@@ -18,6 +18,13 @@ fn create_sample_spec(dir: &TempDir, filename: &str, content: &str) {
     fs::write(specs.join(filename), content).unwrap();
 }
 
+/// Helper: create a spec file inside a group subdirectory.
+fn create_grouped_spec(dir: &TempDir, group: &str, filename: &str, content: &str) {
+    let group_dir = dir.path().join(".specs").join(group);
+    fs::create_dir_all(&group_dir).unwrap();
+    fs::write(group_dir.join(filename), content).unwrap();
+}
+
 fn sample_spec_content() -> String {
     "\
 ---
@@ -839,4 +846,175 @@ fn t28_init_force_removes_legacy_commands() {
     assert!(skills_dir.join("tinyspec-refine/SKILL.md").exists());
     assert!(skills_dir.join("tinyspec-work/SKILL.md").exists());
     assert!(skills_dir.join("tinyspec-task/SKILL.md").exists());
+}
+
+// ─── T.29: Create a grouped spec ────────────────────────────────────────────
+
+#[test]
+fn t29_new_grouped_spec() {
+    let dir = TempDir::new().unwrap();
+
+    tinyspec(&dir)
+        .args(["new", "v1/my-feature"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Created spec:"))
+        .stdout(predicate::str::contains("my-feature.md"));
+
+    // Verify file exists in .specs/v1/
+    let group_dir = dir.path().join(".specs/v1");
+    assert!(group_dir.exists(), ".specs/v1/ directory should exist");
+
+    let entries: Vec<_> = fs::read_dir(&group_dir)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .collect();
+    assert_eq!(entries.len(), 1);
+
+    let filename = entries[0].file_name().to_string_lossy().to_string();
+    assert!(filename.ends_with("-my-feature.md"));
+
+    // Verify content
+    let content = fs::read_to_string(entries[0].path()).unwrap();
+    assert!(content.contains("title: My Feature"));
+}
+
+// ─── T.30: Find/view a grouped spec by name alone ───────────────────────────
+
+#[test]
+fn t30_view_grouped_spec_by_name() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Grouped Feature
+applications:
+    -
+---
+
+# Background
+
+Grouped spec content.
+";
+    create_grouped_spec(&dir, "v1", "2025-03-01-10-00-grouped-feature.md", content);
+
+    tinyspec(&dir)
+        .args(["view", "grouped-feature"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("title: Grouped Feature"))
+        .stdout(predicate::str::contains("Grouped spec content."));
+}
+
+// ─── T.31: List output with grouped and ungrouped specs ─────────────────────
+
+#[test]
+fn t31_list_with_groups() {
+    let dir = TempDir::new().unwrap();
+
+    create_sample_spec(
+        &dir,
+        "2025-01-01-10-00-alpha.md",
+        "---\ntinySpec: v0\ntitle: Alpha\napplications:\n    -\n---\n\n# Background\n",
+    );
+    create_grouped_spec(
+        &dir,
+        "v1",
+        "2025-02-01-10-00-beta.md",
+        "---\ntinySpec: v0\ntitle: Beta\napplications:\n    -\n---\n\n# Background\n",
+    );
+    create_grouped_spec(
+        &dir,
+        "v1",
+        "2025-03-01-10-00-gamma.md",
+        "---\ntinySpec: v0\ntitle: Gamma\napplications:\n    -\n---\n\n# Background\n",
+    );
+
+    let output = tinyspec(&dir).args(["list"]).output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // Ungrouped spec should appear
+    assert!(stdout.contains("alpha"), "Should list ungrouped spec");
+    assert!(stdout.contains("Alpha"), "Should show ungrouped title");
+
+    // Group header should appear
+    assert!(stdout.contains("v1/"), "Should show group header");
+
+    // Grouped specs should appear
+    assert!(stdout.contains("beta"), "Should list grouped spec beta");
+    assert!(stdout.contains("gamma"), "Should list grouped spec gamma");
+}
+
+// ─── T.32: Duplicate names across groups are rejected ───────────────────────
+
+#[test]
+fn t32_reject_duplicate_names_across_groups() {
+    let dir = TempDir::new().unwrap();
+
+    // Create an ungrouped spec named "my-feature"
+    create_sample_spec(
+        &dir,
+        "2025-01-01-10-00-my-feature.md",
+        "---\ntinySpec: v0\ntitle: My Feature\napplications:\n    -\n---\n",
+    );
+
+    // Try to create a grouped spec with the same name
+    tinyspec(&dir)
+        .args(["new", "v1/my-feature"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("already exists"));
+}
+
+// ─── T.33: Check/uncheck on a grouped spec ──────────────────────────────────
+
+#[test]
+fn t33_check_grouped_spec() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Grouped Tasks
+applications:
+    -
+---
+
+# Implementation Plan
+
+- [ ] A: First task
+- [ ] B: Second task
+
+# Test Plan
+
+";
+    create_grouped_spec(&dir, "v2", "2025-03-01-10-00-grouped-tasks.md", content);
+
+    // Check a task
+    tinyspec(&dir)
+        .args(["check", "grouped-tasks", "A"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Checked task A"));
+
+    let updated = fs::read_to_string(
+        dir.path()
+            .join(".specs/v2/2025-03-01-10-00-grouped-tasks.md"),
+    )
+    .unwrap();
+    assert!(updated.contains("- [x] A: First task"));
+    assert!(updated.contains("- [ ] B: Second task"));
+
+    // Uncheck the task
+    tinyspec(&dir)
+        .args(["uncheck", "grouped-tasks", "A"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Unchecked task A"));
+
+    let updated = fs::read_to_string(
+        dir.path()
+            .join(".specs/v2/2025-03-01-10-00-grouped-tasks.md"),
+    )
+    .unwrap();
+    assert!(updated.contains("- [ ] A: First task"));
 }
