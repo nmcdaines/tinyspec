@@ -22,8 +22,35 @@ use serde::Deserialize;
 const SPECS_DIR: &str = ".specs";
 const TIMESTAMP_PREFIX_LEN: usize = 17; // "YYYY-MM-DD-HH-MM-"
 
+/// Walk up from the current directory looking for a `.specs/` directory.
+fn discover_specs_dir() -> Option<PathBuf> {
+    let mut dir = std::env::current_dir().ok()?;
+    loop {
+        let candidate = dir.join(SPECS_DIR);
+        if candidate.is_dir() {
+            return Some(candidate);
+        }
+        if !dir.pop() {
+            return None;
+        }
+    }
+}
+
+/// Walk up from the current directory looking for a `.git` directory (git repo root).
+pub(crate) fn discover_git_root() -> Option<PathBuf> {
+    let mut dir = std::env::current_dir().ok()?;
+    loop {
+        if dir.join(".git").exists() {
+            return Some(dir);
+        }
+        if !dir.pop() {
+            return None;
+        }
+    }
+}
+
 pub(crate) fn specs_dir() -> PathBuf {
-    PathBuf::from(SPECS_DIR)
+    discover_specs_dir().unwrap_or_else(|| PathBuf::from(SPECS_DIR))
 }
 
 /// Extract spec name from a filename like `2025-02-17-09-36-hello-world.md`
