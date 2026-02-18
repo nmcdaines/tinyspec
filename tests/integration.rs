@@ -816,8 +816,13 @@ fn t28_init_force_removes_legacy_commands() {
     let commands_dir = dir.path().join(".claude/commands");
     fs::create_dir_all(&commands_dir).unwrap();
     fs::write(commands_dir.join("tinyspec:refine.md"), "old").unwrap();
-    fs::write(commands_dir.join("tinyspec:do.md"), "old").unwrap();
+    fs::write(commands_dir.join("tinyspec:work.md"), "old").unwrap();
     fs::write(commands_dir.join("tinyspec:task.md"), "old").unwrap();
+
+    // Pre-populate a stale tinyspec-work skill dir to verify it gets cleaned up
+    let skills_dir = dir.path().join(".claude/skills");
+    fs::create_dir_all(skills_dir.join("tinyspec-work")).unwrap();
+    fs::write(skills_dir.join("tinyspec-work/SKILL.md"), "old").unwrap();
 
     tinyspec(&dir)
         .args(["init", "--force"])
@@ -827,10 +832,13 @@ fn t28_init_force_removes_legacy_commands() {
             "Removed legacy .claude/commands/tinyspec:refine.md",
         ))
         .stdout(predicate::str::contains(
-            "Removed legacy .claude/commands/tinyspec:do.md",
+            "Removed legacy .claude/commands/tinyspec:work.md",
         ))
         .stdout(predicate::str::contains(
             "Removed legacy .claude/commands/tinyspec:task.md",
+        ))
+        .stdout(predicate::str::contains(
+            "Removed legacy .claude/skills/tinyspec-work/",
         ))
         .stdout(predicate::str::contains("Created tinyspec-refine/SKILL.md"))
         .stdout(predicate::str::contains("Created tinyspec-do/SKILL.md"))
@@ -838,11 +846,13 @@ fn t28_init_force_removes_legacy_commands() {
 
     // Legacy files should be gone
     assert!(!commands_dir.join("tinyspec:refine.md").exists());
-    assert!(!commands_dir.join("tinyspec:do.md").exists());
+    assert!(!commands_dir.join("tinyspec:work.md").exists());
     assert!(!commands_dir.join("tinyspec:task.md").exists());
 
+    // Stale skill dir should be gone
+    assert!(!skills_dir.join("tinyspec-work").exists());
+
     // New skill files should exist
-    let skills_dir = dir.path().join(".claude/skills");
     assert!(skills_dir.join("tinyspec-refine/SKILL.md").exists());
     assert!(skills_dir.join("tinyspec-do/SKILL.md").exists());
     assert!(skills_dir.join("tinyspec-task/SKILL.md").exists());

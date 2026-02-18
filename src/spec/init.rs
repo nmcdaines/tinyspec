@@ -7,7 +7,10 @@ const TINYSPEC_TASK_SKILL: &str = include_str!("../skills/tinyspec-task.md");
 const TINYSPEC_ONESHOT_SKILL: &str = include_str!("../skills/tinyspec-oneshot.md");
 
 pub fn init(force: bool) -> Result<(), String> {
-    // Remove legacy .claude/commands/tinyspec*.md files when --force is used
+    let skills_dir = Path::new(".claude/skills");
+
+    // Remove legacy .claude/commands/tinyspec*.md files and stale
+    // .claude/skills/tinyspec-* dirs when --force is used
     if force {
         let commands_dir = Path::new(".claude/commands");
         if commands_dir.is_dir()
@@ -24,9 +27,22 @@ pub fn init(force: bool) -> Result<(), String> {
                 }
             }
         }
-    }
 
-    let skills_dir = Path::new(".claude/skills");
+        if skills_dir.is_dir()
+            && let Ok(entries) = fs::read_dir(skills_dir)
+        {
+            for entry in entries.flatten() {
+                let name = entry.file_name();
+                let name = name.to_string_lossy();
+                if name.starts_with("tinyspec-")
+                    && entry.path().is_dir()
+                    && fs::remove_dir_all(entry.path()).is_ok()
+                {
+                    println!("Removed legacy .claude/skills/{name}/");
+                }
+            }
+        }
+    }
     let skills: &[(&str, &str)] = &[
         ("tinyspec-refine", TINYSPEC_REFINE_SKILL),
         ("tinyspec-do", TINYSPEC_DO_SKILL),
