@@ -121,6 +121,13 @@ jobs:
           path: artifacts
           merge-multiple: true
 
+      - name: Generate checksums
+        run: |
+          cd artifacts
+          sha256sum * > checksums.txt
+          cat checksums.txt
+          cd ..
+
       - name: Create tag
         run: |
           git tag ${{ needs.check-version.outputs.tag }}
