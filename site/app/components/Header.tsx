@@ -7,7 +7,7 @@ export default function Header() {
             tinyspec
           </a>
           <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted">
-            v0.0.8
+            v0.0.9
           </span>
         </div>
         <div className="flex items-center gap-4">

@@ -34,6 +34,6 @@ Changes are prompt-only — no Rust code modifications are needed. Both the sour
   - [x] C.1: Replace "ask which repo to focus on" with an active exploration step before implementing the task
   - [x] C.2: Instruct agent to explore relevant parts of all referenced repos to understand context
   - [x] C.3: Update both `src/skills/tinyspec-task.md` and `.claude/skills/tinyspec-task/SKILL.md`
-- [ ] 🧪 Run `cargo test` upon completion
+- [x] 🧪 Run `cargo test` upon completion
 
 # Test Plan
