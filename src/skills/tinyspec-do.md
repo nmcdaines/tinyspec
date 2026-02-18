@@ -1,5 +1,5 @@
 ---
-name: tinyspec:work
+name: tinyspec:do
 description: Implement a spec's full Implementation Plan, working through tasks in order
 ---
 
