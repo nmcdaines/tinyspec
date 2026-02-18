@@ -23,12 +23,12 @@ To update skills to the latest version (after upgrading tinyspec):
 tinyspec init --force
 ```
 
-## /tinyspec-refine
+## /tinyspec:refine
 
 Collaborative spec refinement. Use this to turn a rough idea into a concrete implementation plan.
 
 ```
-/tinyspec-refine my-feature
+/tinyspec:refine my-feature
 ```
 
 **What it does:**
@@ -42,12 +42,12 @@ Collaborative spec refinement. Use this to turn a rough idea into a concrete imp
 
 You can run refine multiple times to iterate on the plan.
 
-## /tinyspec-do
+## /tinyspec:do
 
 Implements the full Implementation Plan, working through task groups in order.
 
 ```
-/tinyspec-do my-feature
+/tinyspec:do my-feature
 ```
 
 **What it does:**
@@ -63,12 +63,12 @@ Implements the full Implementation Plan, working through task groups in order.
 
 If the spec lists multiple applications, Claude will ask which repositories to focus on before starting.
 
-## /tinyspec-task
+## /tinyspec:task
 
 Implements a single specific task from the plan.
 
 ```
-/tinyspec-task my-feature A.1
+/tinyspec:task my-feature A.1
 ```
 
 **What it does:**
@@ -80,14 +80,14 @@ Implements a single specific task from the plan.
 
 If the task depends on uncompleted prior tasks, Claude will ask how to proceed.
 
-## /tinyspec-oneshot
+## /tinyspec:oneshot
 
 Two modes of operation:
 
 **Execute all pending specs:**
 
 ```
-/tinyspec-oneshot
+/tinyspec:oneshot
 ```
 
 Finds all incomplete specs and works through them in chronological order. Operates autonomously, resolving ambiguity via codebase patterns and only asking for truly blocking decisions.

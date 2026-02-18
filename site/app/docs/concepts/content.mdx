@@ -15,15 +15,15 @@ applications:
 ---
 ```
 
-| Field | Description |
-| --- | --- |
-| `tinySpec` | Format version (currently `v0`) |
-| `title` | Human-readable title, auto-generated from the spec name |
+| Field          | Description                                              |
+| -------------- | -------------------------------------------------------- |
+| `tinySpec`     | Format version (currently `v0`)                          |
+| `title`        | Human-readable title, auto-generated from the spec name  |
 | `applications` | List of repository names for multi-repo specs (optional) |
 
 ### Background
 
-Context on the domain and the problem you're solving. This section is written by you and helps Claude understand *why* the work is needed.
+Context on the domain and the problem you're solving. This section is written by you and helps Claude understand _why_ the work is needed.
 
 ### Proposal
 
@@ -31,7 +31,7 @@ A description of the proposed changes — what will be built or changed. Write t
 
 ### Implementation Plan
 
-A structured checklist of work. This is typically scaffolded by the `/tinyspec-refine` skill and then reviewed by you.
+A structured checklist of work. This is typically scaffolded by the `/tinyspec:refine` skill and then reviewed by you.
 
 ```markdown
 - [ ] A: Set up database schema
@@ -58,7 +58,7 @@ An optional section for test cases using Given/When/Then syntax:
 
 Work in the Implementation Plan is organized into **task groups** identified by letters (A, B, C...) and **subtasks** using dotted notation (A.1, A.2, A.3...).
 
-Task groups represent logical units of work — typically a feature, a layer, or a phase. Subtasks break each group into individual steps. The `/tinyspec-do` skill implements groups in order, committing after each group completes.
+Task groups represent logical units of work — typically a feature, a layer, or a phase. Subtasks break each group into individual steps. The `/tinyspec:do` skill implements groups in order, committing after each group completes.
 
 ### Task ID format
 
@@ -72,11 +72,11 @@ A spec typically moves through these phases:
 
 1. **Create** — `tinyspec new my-feature` scaffolds the file
 2. **Define** — you write the Background and Proposal
-3. **Refine** — `/tinyspec-refine` asks questions, suggests improvements, and builds the Implementation Plan
-4. **Implement** — `/tinyspec-do` or `/tinyspec-task` executes the plan
+3. **Refine** — `/tinyspec:refine` asks questions, suggests improvements, and builds the Implementation Plan
+4. **Implement** — `/tinyspec:do` or `/tinyspec:task` executes the plan
 5. **Complete** — all tasks checked off, code committed
 
-You can iterate between phases. Running `/tinyspec-refine` again updates the plan. Tasks can be unchecked with `tinyspec uncheck` to redo work.
+You can iterate between phases. Running `/tinyspec:refine` again updates the plan. Tasks can be unchecked with `tinyspec uncheck` to redo work.
 
 ## Spec organization
 
