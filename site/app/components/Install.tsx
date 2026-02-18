@@ -91,13 +91,7 @@ type Step = {
   type: "terminal" | "claude";
 };
 
-const steps: Step[] = [
-  {
-    step: "1",
-    title: "Install tinyspec",
-    command: "cargo install tinyspec",
-    type: "terminal",
-  },
+const stepsAfterInstall: Step[] = [
   {
     step: "2",
     title: "Initialize in your project",
@@ -124,7 +118,16 @@ const steps: Step[] = [
   },
 ];
 
+type InstallMethod = "quick" | "cargo";
+
+const installCommands: Record<InstallMethod, string> = {
+  quick: "curl -fsSL https://tinyspec.dev/install.sh | sh",
+  cargo: "cargo install tinyspec",
+};
+
 export default function Install() {
+  const [method, setMethod] = useState<InstallMethod>("quick");
+
   return (
     <section className="px-6 py-24">
       <div className="mx-auto max-w-2xl">
@@ -135,7 +138,40 @@ export default function Install() {
           Install tinyspec, create a spec, and let Claude Code handle the rest.
         </p>
         <div className="mt-12 space-y-6">
-          {steps.map((item) => (
+          <div className="flex gap-4">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
+              1
+            </div>
+            <div className="flex-1">
+              <div className="mb-2 flex items-center gap-3">
+                <p className="font-medium">Install tinyspec</p>
+                <div className="flex gap-1 rounded-md bg-code-bg p-0.5 text-xs">
+                  <button
+                    onClick={() => setMethod("quick")}
+                    className={`rounded px-2 py-0.5 transition-colors ${
+                      method === "quick"
+                        ? "bg-accent text-white"
+                        : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    Quick install
+                  </button>
+                  <button
+                    onClick={() => setMethod("cargo")}
+                    className={`rounded px-2 py-0.5 transition-colors ${
+                      method === "cargo"
+                        ? "bg-accent text-white"
+                        : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    From source
+                  </button>
+                </div>
+              </div>
+              <TerminalBlock command={installCommands[method]} />
+            </div>
+          </div>
+          {stepsAfterInstall.map((item) => (
             <div key={item.step} className="flex gap-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
                 {item.step}
