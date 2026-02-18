@@ -838,7 +838,7 @@ fn t28_init_force_removes_legacy_commands() {
             "Removed legacy .claude/commands/tinyspec:task.md",
         ))
         .stdout(predicate::str::contains(
-            "Removed legacy .claude/skills/tinyspec-work/",
+            "Removed legacy .claude/skills/tinyspec-work",
         ))
         .stdout(predicate::str::contains("Created tinyspec-refine/SKILL.md"))
         .stdout(predicate::str::contains("Created tinyspec-do/SKILL.md"))

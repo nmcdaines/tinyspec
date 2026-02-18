@@ -6,42 +6,44 @@ const TINYSPEC_DO_SKILL: &str = include_str!("../skills/tinyspec-do.md");
 const TINYSPEC_TASK_SKILL: &str = include_str!("../skills/tinyspec-task.md");
 const TINYSPEC_ONESHOT_SKILL: &str = include_str!("../skills/tinyspec-oneshot.md");
 
+fn remove_matching_entries(
+    dir: &Path,
+    label: &str,
+    filter: impl Fn(&str, &Path) -> bool,
+    remove: impl for<'a> Fn(&'a Path) -> std::io::Result<()>,
+) {
+    if dir.is_dir()
+        && let Ok(entries) = fs::read_dir(dir)
+    {
+        for entry in entries.flatten() {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            let path = entry.path();
+            if filter(&name, &path) && remove(&path).is_ok() {
+                println!("Removed legacy {label}/{name}");
+            }
+        }
+    }
+}
+
 pub fn init(force: bool) -> Result<(), String> {
     let skills_dir = Path::new(".claude/skills");
 
     // Remove legacy .claude/commands/tinyspec*.md files and stale
     // .claude/skills/tinyspec-* dirs when --force is used
     if force {
-        let commands_dir = Path::new(".claude/commands");
-        if commands_dir.is_dir()
-            && let Ok(entries) = fs::read_dir(commands_dir)
-        {
-            for entry in entries.flatten() {
-                let name = entry.file_name();
-                let name = name.to_string_lossy();
-                if name.starts_with("tinyspec")
-                    && name.ends_with(".md")
-                    && fs::remove_file(entry.path()).is_ok()
-                {
-                    println!("Removed legacy .claude/commands/{name}");
-                }
-            }
-        }
-
-        if skills_dir.is_dir()
-            && let Ok(entries) = fs::read_dir(skills_dir)
-        {
-            for entry in entries.flatten() {
-                let name = entry.file_name();
-                let name = name.to_string_lossy();
-                if name.starts_with("tinyspec-")
-                    && entry.path().is_dir()
-                    && fs::remove_dir_all(entry.path()).is_ok()
-                {
-                    println!("Removed legacy .claude/skills/{name}/");
-                }
-            }
-        }
+        remove_matching_entries(
+            Path::new(".claude/commands"),
+            ".claude/commands",
+            |name, _| name.starts_with("tinyspec") && name.ends_with(".md"),
+            |path| fs::remove_file(path),
+        );
+        remove_matching_entries(
+            skills_dir,
+            ".claude/skills",
+            |name, path| name.starts_with("tinyspec-") && path.is_dir(),
+            |path| fs::remove_dir_all(path),
+        );
     }
     let skills: &[(&str, &str)] = &[
         ("tinyspec-refine", TINYSPEC_REFINE_SKILL),
