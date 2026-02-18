@@ -99,7 +99,7 @@ const steps: Step[] = [
   {
     step: "5",
     title: "Implement the plan",
-    command: "/tinyspec-work my-feature",
+    command: "/tinyspec-do my-feature",
     type: "claude",
   },
 ];
@@ -138,7 +138,7 @@ export default function Install() {
           </code>{" "}
           again to iterate, then{" "}
           <code className="rounded bg-code-bg px-1.5 py-0.5 font-mono text-xs">
-            /tinyspec-work
+            /tinyspec-do
           </code>{" "}
           to continue implementing.
         </p>
