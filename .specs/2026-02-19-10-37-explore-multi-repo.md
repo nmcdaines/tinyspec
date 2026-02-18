@@ -26,14 +26,14 @@ Changes are prompt-only — no Rust code modifications are needed. Both the sour
   - [x] A.2: Add multi-repo exploration step — instruct agent to explore directory trees and key files in each referenced repo before proposing implementation plans
   - [x] A.3: Add fallback instruction — when no applications are defined, explore only the current directory
   - [x] A.4: Update both `src/skills/tinyspec-refine.md` and `.claude/skills/tinyspec-refine/SKILL.md`
-- [ ] B: Update tinyspec-do skill prompt
-  - [ ] B.1: Replace "ask which repo to focus on" with an active exploration step before beginning work
-  - [ ] B.2: Instruct agent to explore directory trees and key files of all referenced repos after reading the spec
-  - [ ] B.3: Update both `src/skills/tinyspec-do.md` and `.claude/skills/tinyspec-do/SKILL.md`
-- [ ] C: Update tinyspec-task skill prompt
-  - [ ] C.1: Replace "ask which repo to focus on" with an active exploration step before implementing the task
-  - [ ] C.2: Instruct agent to explore relevant parts of all referenced repos to understand context
-  - [ ] C.3: Update both `src/skills/tinyspec-task.md` and `.claude/skills/tinyspec-task/SKILL.md`
+- [x] B: Update tinyspec-do skill prompt
+  - [x] B.1: Replace "ask which repo to focus on" with an active exploration step before beginning work
+  - [x] B.2: Instruct agent to explore directory trees and key files of all referenced repos after reading the spec
+  - [x] B.3: Update both `src/skills/tinyspec-do.md` and `.claude/skills/tinyspec-do/SKILL.md`
+- [x] C: Update tinyspec-task skill prompt
+  - [x] C.1: Replace "ask which repo to focus on" with an active exploration step before implementing the task
+  - [x] C.2: Instruct agent to explore relevant parts of all referenced repos to understand context
+  - [x] C.3: Update both `src/skills/tinyspec-task.md` and `.claude/skills/tinyspec-task/SKILL.md`
 - [ ] 🧪 Run `cargo test` upon completion
 
 # Test Plan

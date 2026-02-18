@@ -793,8 +793,8 @@ fn t27_init_generates_updated_skills() {
         "tinyspec-do/SKILL.md should reference `tinyspec view`"
     );
     assert!(
-        work.contains("multiple applications"),
-        "tinyspec-do/SKILL.md should mention multiple applications"
+        work.contains("references applications"),
+        "tinyspec-do/SKILL.md should mention referenced applications"
     );
 
     let task = fs::read_to_string(skills_dir.join("tinyspec-task/SKILL.md")).unwrap();
@@ -803,8 +803,8 @@ fn t27_init_generates_updated_skills() {
         "tinyspec-task/SKILL.md should reference `tinyspec view`"
     );
     assert!(
-        task.contains("multiple applications"),
-        "tinyspec-task/SKILL.md should mention multiple applications"
+        task.contains("references applications"),
+        "tinyspec-task/SKILL.md should mention referenced applications"
     );
 }
 
