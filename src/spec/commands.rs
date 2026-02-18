@@ -8,8 +8,8 @@ use super::config::{config_path, load_config};
 use super::format::format_file;
 use super::templates::{collect_templates, find_template, substitute_variables};
 use super::{
-    TIMESTAMP_PREFIX_LEN, collect_spec_files, extract_spec_name, find_spec, parse_front_matter,
-    parse_spec_input, specs_dir,
+    SPECS_DIR, TIMESTAMP_PREFIX_LEN, collect_spec_files, discover_git_root, extract_spec_name,
+    find_spec, parse_front_matter, parse_spec_input, specs_dir,
 };
 
 pub fn new_spec(input: &str, template_name: Option<&str>) -> Result<(), String> {
@@ -28,9 +28,18 @@ pub fn new_spec(input: &str, template_name: Option<&str>) -> Result<(), String> 
         }
     }
 
+    // If .specs/ doesn't exist yet, create it at the git repo root (if in a git repo)
+    let base = if specs_dir().exists() {
+        specs_dir()
+    } else {
+        match discover_git_root() {
+            Some(root) => root.join(SPECS_DIR),
+            None => specs_dir(),
+        }
+    };
     let dir = match group {
-        Some(g) => specs_dir().join(g),
-        None => specs_dir(),
+        Some(g) => base.join(g),
+        None => base,
     };
     fs::create_dir_all(&dir)
         .map_err(|e| format!("Failed to create {} directory: {e}", dir.display()))?;
