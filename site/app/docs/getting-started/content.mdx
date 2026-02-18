@@ -4,7 +4,9 @@ tinyspec is a tiny framework for spec-driven development with Claude Code. You w
 
 ## Install
 
-The fastest way to install tinyspec is with the install script:
+The fastest way to install tinyspec is with the install script.
+
+**macOS / Linux:**
 
 ```
 curl -fsSL https://tinyspec.dev/install.sh | sh
@@ -12,7 +14,15 @@ curl -fsSL https://tinyspec.dev/install.sh | sh
 
 This detects your platform, downloads the correct binary, and installs it to `~/.local/bin`.
 
-Alternatively, if you have the Rust toolchain installed, you can build from source via [crates.io](https://crates.io/crates/tinyspec):
+**Windows (PowerShell):**
+
+```
+irm https://tinyspec.dev/install.ps1 | iex
+```
+
+This downloads the correct binary and installs it to `%LOCALAPPDATA%\tinyspec`, adding it to your PATH automatically.
+
+Alternatively, if you have the Rust toolchain installed, you can build from source on any platform via [crates.io](https://crates.io/crates/tinyspec):
 
 ```
 cargo install tinyspec
