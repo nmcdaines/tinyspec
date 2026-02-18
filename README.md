@@ -33,7 +33,7 @@ tinyspec init
 
 This creates three skills in `.claude/skills/`:
 - `/tinyspec:refine` — Collaborate with Claude to define the problem and build an implementation plan
-- `/tinyspec:work` — Work through the implementation plan task by task
+- `/tinyspec:do` — Work through the implementation plan task by task
 - `/tinyspec:task` — Complete a specific task from the plan
 
 To update the skills after upgrading tinyspec:
@@ -83,7 +83,7 @@ Claude will read your spec, ask clarifying questions, and help you build out the
 Once the plan is ready, run:
 
 ```
-/tinyspec:work my-feature
+/tinyspec:do my-feature
 ```
 
 Claude will work through each task group in order, checking off subtasks as they're completed and committing progress after each group.

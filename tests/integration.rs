@@ -330,12 +330,12 @@ fn t11_init_creates_skill_files() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Created tinyspec-refine/SKILL.md"))
-        .stdout(predicate::str::contains("Created tinyspec-work/SKILL.md"))
+        .stdout(predicate::str::contains("Created tinyspec-do/SKILL.md"))
         .stdout(predicate::str::contains("Created tinyspec-task/SKILL.md"));
 
     let skills_dir = dir.path().join(".claude/skills");
     assert!(skills_dir.join("tinyspec-refine/SKILL.md").exists());
-    assert!(skills_dir.join("tinyspec-work/SKILL.md").exists());
+    assert!(skills_dir.join("tinyspec-do/SKILL.md").exists());
     assert!(skills_dir.join("tinyspec-task/SKILL.md").exists());
 
     // Verify skill files have content
@@ -357,7 +357,7 @@ fn t12_init_no_overwrite() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Skipped tinyspec-refine/SKILL.md"))
-        .stdout(predicate::str::contains("Created tinyspec-work/SKILL.md"))
+        .stdout(predicate::str::contains("Created tinyspec-do/SKILL.md"))
         .stdout(predicate::str::contains("Created tinyspec-task/SKILL.md"));
 
     // Verify custom content preserved
@@ -787,14 +787,14 @@ fn t27_init_generates_updated_skills() {
 
     let skills_dir = dir.path().join(".claude/skills");
 
-    let work = fs::read_to_string(skills_dir.join("tinyspec-work/SKILL.md")).unwrap();
+    let work = fs::read_to_string(skills_dir.join("tinyspec-do/SKILL.md")).unwrap();
     assert!(
         work.contains("tinyspec view"),
-        "tinyspec-work/SKILL.md should reference `tinyspec view`"
+        "tinyspec-do/SKILL.md should reference `tinyspec view`"
     );
     assert!(
         work.contains("multiple applications"),
-        "tinyspec-work/SKILL.md should mention multiple applications"
+        "tinyspec-do/SKILL.md should mention multiple applications"
     );
 
     let task = fs::read_to_string(skills_dir.join("tinyspec-task/SKILL.md")).unwrap();
@@ -819,6 +819,11 @@ fn t28_init_force_removes_legacy_commands() {
     fs::write(commands_dir.join("tinyspec:work.md"), "old").unwrap();
     fs::write(commands_dir.join("tinyspec:task.md"), "old").unwrap();
 
+    // Pre-populate a stale tinyspec-work skill dir to verify it gets cleaned up
+    let skills_dir = dir.path().join(".claude/skills");
+    fs::create_dir_all(skills_dir.join("tinyspec-work")).unwrap();
+    fs::write(skills_dir.join("tinyspec-work/SKILL.md"), "old").unwrap();
+
     tinyspec(&dir)
         .args(["init", "--force"])
         .assert()
@@ -832,8 +837,11 @@ fn t28_init_force_removes_legacy_commands() {
         .stdout(predicate::str::contains(
             "Removed legacy .claude/commands/tinyspec:task.md",
         ))
+        .stdout(predicate::str::contains(
+            "Removed legacy .claude/skills/tinyspec-work",
+        ))
         .stdout(predicate::str::contains("Created tinyspec-refine/SKILL.md"))
-        .stdout(predicate::str::contains("Created tinyspec-work/SKILL.md"))
+        .stdout(predicate::str::contains("Created tinyspec-do/SKILL.md"))
         .stdout(predicate::str::contains("Created tinyspec-task/SKILL.md"));
 
     // Legacy files should be gone
@@ -841,10 +849,12 @@ fn t28_init_force_removes_legacy_commands() {
     assert!(!commands_dir.join("tinyspec:work.md").exists());
     assert!(!commands_dir.join("tinyspec:task.md").exists());
 
+    // Stale skill dir should be gone
+    assert!(!skills_dir.join("tinyspec-work").exists());
+
     // New skill files should exist
-    let skills_dir = dir.path().join(".claude/skills");
     assert!(skills_dir.join("tinyspec-refine/SKILL.md").exists());
-    assert!(skills_dir.join("tinyspec-work/SKILL.md").exists());
+    assert!(skills_dir.join("tinyspec-do/SKILL.md").exists());
     assert!(skills_dir.join("tinyspec-task/SKILL.md").exists());
 }
 
