@@ -1778,3 +1778,97 @@ applications:
         "Formatter should be idempotent with emoji"
     );
 }
+
+// ─── T.52: Discover .specs/ from a subdirectory ──────────────────────────────
+
+#[test]
+fn t52_discover_specs_from_subdirectory() {
+    let dir = TempDir::new().unwrap();
+
+    create_sample_spec(
+        &dir,
+        "2025-01-01-10-00-alpha.md",
+        "---\ntinySpec: v0\ntitle: Alpha Spec\napplications:\n    -\n---\n\n# Background\n",
+    );
+
+    // Create a subdirectory to run from
+    let subdir = dir.path().join("src").join("deep");
+    fs::create_dir_all(&subdir).unwrap();
+
+    let mut cmd = Command::cargo_bin("tinyspec").unwrap();
+    cmd.current_dir(&subdir);
+    cmd.args(["list"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("alpha"))
+        .stdout(predicate::str::contains("Alpha Spec"));
+}
+
+// ─── T.53: Fallback to cwd when no .specs/ exists above ─────────────────────
+
+#[test]
+fn t53_fallback_to_cwd_when_no_specs_above() {
+    let dir = TempDir::new().unwrap();
+    // No .specs/ directory anywhere
+
+    tinyspec(&dir)
+        .args(["list"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("No specs found."));
+}
+
+// ─── T.54: New creates .specs/ at git root from a subdirectory ───────────────
+
+#[test]
+fn t54_new_creates_specs_at_git_root() {
+    let dir = TempDir::new().unwrap();
+
+    // Initialize a git repo at the root
+    std::process::Command::new("git")
+        .args(["init"])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+
+    // Create a subdirectory to run from
+    let subdir = dir.path().join("src").join("deep");
+    fs::create_dir_all(&subdir).unwrap();
+
+    let mut cmd = Command::cargo_bin("tinyspec").unwrap();
+    cmd.current_dir(&subdir);
+    cmd.args(["new", "my-spec"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Created spec:"));
+
+    // .specs/ should be created at the git root, not in the subdirectory
+    assert!(
+        dir.path().join(".specs").exists(),
+        ".specs/ should be at the git root"
+    );
+    assert!(
+        !subdir.join(".specs").exists(),
+        ".specs/ should NOT be in the subdirectory"
+    );
+}
+
+// ─── T.55: New creates .specs/ in cwd when not in a git repo ─────────────────
+
+#[test]
+fn t55_new_creates_specs_in_cwd_without_git() {
+    let dir = TempDir::new().unwrap();
+    // No git init — not a git repo
+
+    tinyspec(&dir)
+        .args(["new", "my-spec"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Created spec:"));
+
+    // .specs/ should be created in the current directory
+    assert!(
+        dir.path().join(".specs").exists(),
+        ".specs/ should be in the current directory"
+    );
+}
