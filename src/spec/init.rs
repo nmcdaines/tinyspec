@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 const TINYSPEC_REFINE_SKILL: &str = include_str!("../skills/tinyspec-refine.md");
-const TINYSPEC_WORK_SKILL: &str = include_str!("../skills/tinyspec-work.md");
+const TINYSPEC_DO_SKILL: &str = include_str!("../skills/tinyspec-do.md");
 const TINYSPEC_TASK_SKILL: &str = include_str!("../skills/tinyspec-task.md");
 const TINYSPEC_ONESHOT_SKILL: &str = include_str!("../skills/tinyspec-oneshot.md");
 
@@ -29,7 +29,7 @@ pub fn init(force: bool) -> Result<(), String> {
     let skills_dir = Path::new(".claude/skills");
     let skills: &[(&str, &str)] = &[
         ("tinyspec-refine", TINYSPEC_REFINE_SKILL),
-        ("tinyspec-work", TINYSPEC_WORK_SKILL),
+        ("tinyspec-do", TINYSPEC_DO_SKILL),
         ("tinyspec-task", TINYSPEC_TASK_SKILL),
         ("tinyspec-oneshot", TINYSPEC_ONESHOT_SKILL),
     ];
