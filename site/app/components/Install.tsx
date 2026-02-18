@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -125,8 +125,23 @@ const installCommands: Record<InstallMethod, string> = {
   cargo: "cargo install tinyspec",
 };
 
+const windowsInstallCommands: Record<InstallMethod, string> = {
+  quick: "irm https://tinyspec.dev/install.ps1 | iex",
+  cargo: "cargo install tinyspec",
+};
+
+function useIsWindows() {
+  const [isWindows, setIsWindows] = useState(false);
+  useEffect(() => {
+    setIsWindows(navigator.platform?.startsWith("Win") ?? false);
+  }, []);
+  return isWindows;
+}
+
 export default function Install() {
   const [method, setMethod] = useState<InstallMethod>("quick");
+  const isWindows = useIsWindows();
+  const commands = isWindows ? windowsInstallCommands : installCommands;
 
   return (
     <section className="px-6 py-24">
@@ -168,7 +183,7 @@ export default function Install() {
                   </button>
                 </div>
               </div>
-              <TerminalBlock command={installCommands[method]} />
+              <TerminalBlock command={commands[method]} />
             </div>
           </div>
           {stepsAfterInstall.map((item) => (
