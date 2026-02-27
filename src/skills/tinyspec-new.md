@@ -14,6 +14,7 @@ Your goal is to create a new spec, populate it with initial content based on the
 ## Step 1: Determine the spec name
 
 Derive a short, descriptive kebab-case spec name from the description. For example:
+
 - "Add user authentication" → `user-authentication`
 - "Fix the login redirect bug" → `fix-login-redirect`
 - "Support dark mode" → `dark-mode`
