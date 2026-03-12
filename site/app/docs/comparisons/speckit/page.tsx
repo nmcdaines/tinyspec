@@ -3,7 +3,7 @@ import Content from "./content.mdx";
 
 export default function SpecKitComparisonPage() {
   return (
-    <DocPage slug="comparisons">
+    <DocPage slug="comparisons/speckit">
       <Content />
     </DocPage>
   );

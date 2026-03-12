@@ -1,5 +1,5 @@
 import Sidebar from "./Sidebar";
-import { docsNav } from "./nav";
+import { flatNav } from "./nav";
 
 export default function DocPage({
   slug,
@@ -8,10 +8,11 @@ export default function DocPage({
   slug: string;
   children: React.ReactNode;
 }) {
-  const currentIndex = docsNav.findIndex((item) => item.slug === slug);
-  const prev = currentIndex > 0 ? docsNav[currentIndex - 1] : null;
+  const flat = flatNav();
+  const currentIndex = flat.findIndex((item) => item.slug === slug);
+  const prev = currentIndex > 0 ? flat[currentIndex - 1] : null;
   const next =
-    currentIndex < docsNav.length - 1 ? docsNav[currentIndex + 1] : null;
+    currentIndex < flat.length - 1 ? flat[currentIndex + 1] : null;
 
   return (
     <>

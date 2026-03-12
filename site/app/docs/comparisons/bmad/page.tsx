@@ -3,7 +3,7 @@ import Content from "./content.mdx";
 
 export default function BMadComparisonPage() {
   return (
-    <DocPage slug="comparisons">
+    <DocPage slug="comparisons/bmad">
       <Content />
     </DocPage>
   );

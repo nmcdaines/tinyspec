@@ -3,7 +3,7 @@ import Content from "./content.mdx";
 
 export default function OpenSpecComparisonPage() {
   return (
-    <DocPage slug="comparisons">
+    <DocPage slug="comparisons/openspec">
       <Content />
     </DocPage>
   );

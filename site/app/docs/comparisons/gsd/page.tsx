@@ -3,7 +3,7 @@ import Content from "./content.mdx";
 
 export default function GSDComparisonPage() {
   return (
-    <DocPage slug="comparisons">
+    <DocPage slug="comparisons/gsd">
       <Content />
     </DocPage>
   );

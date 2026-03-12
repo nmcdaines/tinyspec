@@ -1,7 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { docsNav } from "./nav";
+import { docsNav, NavItem } from "./nav";
+
+function NavLink({
+  item,
+  currentSlug,
+  indented,
+  onClick,
+}: {
+  item: NavItem;
+  currentSlug?: string;
+  indented?: boolean;
+  onClick: () => void;
+}) {
+  const isActive = currentSlug === item.slug;
+  return (
+    <a
+      href={`/docs/${item.slug}`}
+      onClick={onClick}
+      className={`block rounded-md py-2 text-sm transition-colors ${
+        indented ? "pl-6 pr-3" : "px-3"
+      } ${
+        isActive
+          ? "bg-accent/10 font-medium text-accent"
+          : "text-muted hover:bg-code-bg hover:text-foreground"
+      }`}
+    >
+      {item.title}
+    </a>
+  );
+}
 
 export default function Sidebar({ currentSlug }: { currentSlug?: string }) {
   const [open, setOpen] = useState(false);
@@ -59,17 +88,25 @@ export default function Sidebar({ currentSlug }: { currentSlug?: string }) {
           <ul className="space-y-1">
             {docsNav.map((item) => (
               <li key={item.slug}>
-                <a
-                  href={`/docs/${item.slug}`}
+                <NavLink
+                  item={item}
+                  currentSlug={currentSlug}
                   onClick={() => setOpen(false)}
-                  className={`block rounded-md px-3 py-2 text-sm transition-colors ${
-                    currentSlug === item.slug
-                      ? "bg-accent/10 font-medium text-accent"
-                      : "text-muted hover:bg-code-bg hover:text-foreground"
-                  }`}
-                >
-                  {item.title}
-                </a>
+                />
+                {item.children && (
+                  <ul className="space-y-1">
+                    {item.children.map((child) => (
+                      <li key={child.slug}>
+                        <NavLink
+                          item={child}
+                          currentSlug={currentSlug}
+                          indented
+                          onClick={() => setOpen(false)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>
