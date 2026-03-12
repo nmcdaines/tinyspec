@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Tiny folded page -->
+  <path d="M7 3h13l6 6v20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <!-- Page fold -->
+  <path d="M20 3v5a1 1 0 0 0 1 1h5" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Spec lines -->
+  <rect x="9" y="13" width="10" height="1.5" rx="0.75" fill="#93c5fd"/>
+  <rect x="9" y="17" width="14" height="1.5" rx="0.75" fill="#93c5fd"/>
+  <rect x="9" y="21" width="8" height="1.5" rx="0.75" fill="#93c5fd"/>
+  <!-- Cute checkmark circle -->
+  <circle cx="24" cy="24" r="6.5" fill="#2563eb"/>
+  <path d="M21 24l2 2 4-4" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
