@@ -1,0 +1,44 @@
+# Comparisons
+
+tinyspec is a lightweight, spec-first authoring tool. You write structured Markdown specs, refine them with AI, and implement them task by task. But it is not the only tool in this space.
+
+This page compares tinyspec against four popular alternatives across the dimensions that matter most: spec format, CLI tooling, workflow integration, and formatting.
+
+## At a glance
+
+| | tinyspec | [OpenSpec](/docs/comparisons/openspec) | [SpecKit](/docs/comparisons/speckit) | [BMad](/docs/comparisons/bmad) | [GSD](/docs/comparisons/gsd) |
+| --- | --- | --- | --- | --- | --- |
+| **Approach** | Spec authoring tool | Workflow orchestration | Full lifecycle framework | Process framework with AI personas | Multi-agent orchestration |
+| **Spec format** | Single Markdown file | Multi-file per change (proposal, specs, design, tasks) | Templated Markdown with formal IDs | YAML agents + Markdown workflows | XML tasks + generated Markdown |
+| **Standalone CLI** | Yes (native binary) | Partial (npm, config-focused) | Partial (Python, init-focused) | Installer only (npm) | No (slash commands only) |
+| **Spec authoring** | Human-authored, AI-assisted | AI-generated from proposals | AI-generated from templates | AI personas guide creation | System-generated |
+| **Auto-formatting** | Yes (`tinyspec format`) | No | No | No | No |
+| **Task tracking** | Built-in (`check`/`uncheck`/`status`) | Via slash commands | Via slash commands | No | Via slash commands |
+| **Install** | Single binary | npm (Node.js 20.19+) | Python 3.11+ / uv | npm | npm |
+| **LLM dependency** | Optional (specs work without AI) | Required for core workflow | Required for core workflow | Required (agents are LLM-driven) | Required (agents are LLM-driven) |
+| **Weight** | Lightweight | Medium | Heavy | Heavy | Heavy |
+
+## Key differentiators
+
+### Human-first specs
+
+tinyspec specs are plain Markdown files with a simple structure: Background, Proposal, Implementation Plan, and Test Plan. You can write and read them without any tooling. The other tools in this space generate specs through AI conversations, making the AI the primary author rather than a collaborator.
+
+### Standalone CLI
+
+tinyspec ships as a single native binary with commands for creating, formatting, checking, and tracking specs. Most alternatives either have no real CLI (GSD, BMad) or use their CLI primarily for project setup rather than spec management (OpenSpec, SpecKit).
+
+### Auto-formatting
+
+`tinyspec format` normalizes your Markdown so specs stay consistent across authors and edits. None of the alternatives offer this — they rely on templates or LLM output consistency instead.
+
+### Minimal overhead
+
+A tinyspec project adds one `.specs/` directory and a few skill files. Alternatives install dozens of files: agent definitions, workflow scripts, templates, schemas, and configuration. tinyspec stays out of your way.
+
+## Detailed comparisons
+
+- [tinyspec vs OpenSpec](/docs/comparisons/openspec) — multi-artifact workflow orchestration
+- [tinyspec vs SpecKit](/docs/comparisons/speckit) — GitHub's full lifecycle framework
+- [tinyspec vs BMad](/docs/comparisons/bmad) — AI persona-driven process framework
+- [tinyspec vs GSD](/docs/comparisons/gsd) — multi-agent parallel execution

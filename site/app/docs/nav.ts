@@ -10,4 +10,5 @@ export const docsNav: NavItem[] = [
   { title: "Claude Code Integration", slug: "claude-code" },
   { title: "Configuration", slug: "configuration" },
   { title: "Dashboard", slug: "dashboard" },
+  { title: "Comparisons", slug: "comparisons" },
 ];

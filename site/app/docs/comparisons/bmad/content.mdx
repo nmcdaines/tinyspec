@@ -1,0 +1,59 @@
+# tinyspec vs BMad METHOD
+
+[BMad METHOD](https://github.com/bmad-code-org/BMAD-METHOD) is an AI-driven agile development framework that installs specialized AI agent personas (PM, Architect, Developer, QA, and more) into your project, guiding you through a full software development lifecycle via LLM conversations.
+
+## Overview
+
+| | tinyspec | BMad METHOD |
+| --- | --- | --- |
+| **Approach** | Spec authoring tool | Process framework with AI personas |
+| **Spec format** | Single Markdown file | YAML agent definitions + Markdown workflows + templates |
+| **CLI** | Native binary, full spec management | Installer only (`install`/`uninstall`/`status`) |
+| **Install** | Single binary | npm |
+| **LLM dependency** | Optional | Required (agents are LLM-driven) |
+
+## Spec format
+
+tinyspec uses a single Markdown file per feature. You write it, refine it with AI, and track implementation progress — all in one place.
+
+BMad METHOD does not have a single spec format. Instead, it installs a system of YAML agent definitions, Markdown workflow scripts, and Markdown output templates into your project. You interact with AI personas (PM, Architect, Developer, etc.) that guide you through sequential workflows to produce planning documents. The framework follows a "micro-file" philosophy where each workflow step is a self-contained instruction file loaded just-in-time.
+
+**tinyspec's advantage:** One format, one file. No need to understand multiple file types or a persona-based interaction model.
+
+**BMad's advantage:** The persona-based approach provides specialized guidance at each phase — a PM helps define requirements differently than an Architect helps define technical design.
+
+## CLI tooling
+
+tinyspec's CLI manages the full spec lifecycle: `new`, `format`, `check`, `uncheck`, `status`, `list`, `view`, and `dashboard`.
+
+BMad METHOD's CLI has three commands: `install`, `uninstall`, and `status`. It is an installer, not a spec management tool. It copies agent definitions, workflow scripts, and templates into your project directory. There are no commands for creating, editing, formatting, or tracking specs.
+
+**tinyspec's advantage:** A real spec management CLI. BMad has no equivalent.
+
+## Workflow integration
+
+tinyspec integrates with Claude Code via skills. Specs live in `.specs/` and are committed to your repo.
+
+BMad METHOD installs agent files that are picked up by LLM coding tools (Claude Code, Cursor, etc.). You interact with specialized personas — asking the PM to create a product brief, the Architect to design the system, the Developer to implement. The sequential workflow enforcement prevents skipping phases.
+
+**tinyspec's advantage:** Specs work with or without an AI agent. You can read, edit, and track them from the command line.
+
+**BMad's advantage:** Comprehensive lifecycle coverage from brainstorming through retrospectives, with specialized guidance at each phase.
+
+## Formatting
+
+tinyspec provides `tinyspec format` for Markdown normalization. BMad METHOD has internal formatting tools for its own repo but exposes no user-facing formatting capabilities.
+
+## When to choose BMad METHOD
+
+- You want a full agile process framework, not just a spec tool
+- You benefit from specialized AI personas guiding each development phase
+- Your team needs structured workflows from brainstorming through QA and retrospectives
+- You want an extensible module system for domain-specific workflows (game dev, etc.)
+
+## When to choose tinyspec
+
+- You want a spec tool, not a process framework
+- You prefer writing specs directly rather than conversing with AI personas
+- You need a standalone CLI for spec management
+- You want minimal files added to your project

@@ -1,0 +1,61 @@
+# tinyspec vs GSD
+
+[GSD (Get Shit Done)](https://github.com/gsd-build/get-shit-done) is a meta-prompting and context engineering framework for Claude Code, OpenCode, Gemini CLI, and Codex. It orchestrates spec-driven development with parallel multi-agent execution, designed to combat context window degradation across long sessions.
+
+## Overview
+
+| | tinyspec | GSD |
+| --- | --- | --- |
+| **Approach** | Spec authoring tool | Multi-agent orchestration |
+| **Spec format** | Single Markdown file | XML tasks + generated Markdown in `.planning/` |
+| **CLI** | Native binary, full spec management | No standalone CLI (slash commands inside LLM tools) |
+| **Install** | Single binary | npm (`npx get-shit-done-cc@latest`) |
+| **LLM dependency** | Optional | Required (slash commands inside LLM tools) |
+
+## Spec format
+
+tinyspec uses a single Markdown file per feature. The format is human-readable and human-writable, with a clear four-section structure.
+
+GSD generates a set of planning documents in a `.planning/` directory plus top-level files (`PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`). Individual tasks use an XML structure optimized for LLM consumption rather than human reading. Files are organized by phase number and deliberately kept small to stay under LLM context quality thresholds.
+
+**tinyspec's advantage:** Specs are written by and for humans. Plain Markdown, no XML, no generated file trees.
+
+**GSD's advantage:** The context engineering approach — small files, fresh context per task — is designed to maintain LLM output quality across large projects.
+
+## CLI tooling
+
+tinyspec provides a standalone binary with commands for creating, formatting, tracking, and managing specs. Every command works from the terminal.
+
+GSD has no standalone CLI. It installs as slash commands within LLM tools (Claude Code, OpenCode, Gemini CLI, Codex). Commands like `new-project`, `plan-phase`, `execute-phase`, and `verify-work` run inside an active AI session.
+
+**tinyspec's advantage:** Works from the terminal without any AI agent.
+
+**GSD's advantage:** Deep integration with the AI execution model — commands like `execute-phase` spawn parallel sub-agents with fresh contexts per task.
+
+## Workflow integration
+
+tinyspec integrates with Claude Code via skills. You drive the workflow: refine a spec, then implement it task by task.
+
+GSD orchestrates multi-agent execution with parallel sub-agents for research, planning, implementation, and verification. Tasks are grouped into dependency waves — independent tasks run in parallel, waves run sequentially. Each task gets a fresh 200k-token context. GSD also supports model profiles (Quality, Balanced, Budget) to control cost.
+
+**tinyspec's advantage:** You control the workflow. Specs are the artifact, not an intermediate step in an agent pipeline.
+
+**GSD's advantage:** Wave-based parallel execution with context isolation is powerful for large implementation tasks.
+
+## Formatting
+
+tinyspec provides `tinyspec format` for consistent Markdown normalization. GSD has no formatting tooling — its planning documents are generated programmatically through LLM prompts.
+
+## When to choose GSD
+
+- You want automated multi-agent execution with parallel task processing
+- Context window management is a priority for your large projects
+- You need wave-based dependency resolution for complex implementation plans
+- You want to control cost with model profile selection (Opus, Sonnet, Haiku)
+
+## When to choose tinyspec
+
+- You want a spec authoring tool, not an execution orchestrator
+- You prefer human-readable specs over LLM-optimized XML tasks
+- You need a standalone CLI that works without an AI agent
+- You want minimal project overhead — one `.specs/` directory vs. a generated `.planning/` tree

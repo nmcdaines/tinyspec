@@ -1,0 +1,59 @@
+# tinyspec vs OpenSpec
+
+[OpenSpec](https://github.com/Fission-AI/OpenSpec) is a spec-driven development framework that structures proposals, specifications, designs, and tasks as versioned Markdown artifacts to guide LLM-based code generation.
+
+## Overview
+
+| | tinyspec | OpenSpec |
+| --- | --- | --- |
+| **Approach** | Spec authoring tool | Workflow orchestration framework |
+| **Spec format** | Single Markdown file | Multi-file per change (proposal, specs, design, tasks) |
+| **CLI** | Native binary, full spec management | npm package, config and schema management |
+| **Install** | Single binary | npm (Node.js 20.19+) |
+| **LLM dependency** | Optional | Required for core workflow |
+
+## Spec format
+
+tinyspec uses a single Markdown file per feature with four sections: Background, Proposal, Implementation Plan, and Test Plan. You write the spec yourself and optionally use AI to refine it.
+
+OpenSpec uses a **multi-artifact pipeline** where each change produces four separate files: `proposal.md`, `specs/` (with RFC 2119 keywords), `design.md`, and `tasks.md`. These are primarily AI-generated from a proposal prompt, not hand-authored. OpenSpec also supports "delta specs" that track changes to existing specifications with ADDED/MODIFIED/REMOVED sections.
+
+**tinyspec's advantage:** Simplicity. One file, one format, easy to read and write without any tooling.
+
+**OpenSpec's advantage:** The multi-artifact structure enforces separation of concerns between rationale, requirements, design, and tasks. Delta specs are useful for evolving brownfield projects.
+
+## CLI tooling
+
+tinyspec ships as a standalone native binary with commands for the full spec lifecycle: `new`, `format`, `check`, `uncheck`, `status`, `list`, `view`, and `dashboard`. Every command works independently without an AI agent.
+
+OpenSpec's CLI (`openspec`) handles project initialization, configuration, and schema management. The actual spec workflow — proposing, applying, archiving — runs as slash commands inside an AI agent session (e.g., `/opsx:propose`, `/opsx:apply`).
+
+**tinyspec's advantage:** Full functionality from the command line. You can create, format, track, and manage specs without any AI dependency.
+
+**OpenSpec's advantage:** Custom schemas let teams define their own artifact types, dependencies, and templates.
+
+## Workflow integration
+
+tinyspec integrates with Claude Code via skills (`/tinyspec:refine`, `/tinyspec:do`, `/tinyspec:task`). Specs are plain Markdown committed to your repo alongside your code.
+
+OpenSpec works with 20+ AI coding tools via slash commands injected into the agent's context. It includes a verification step (`/opsx:verify`) that validates implementation against specs on three dimensions: completeness, correctness, and coherence.
+
+Both tools store specs in git. OpenSpec adds an archive system for completed changes with timestamps.
+
+## Formatting
+
+tinyspec provides `tinyspec format` to normalize Markdown formatting across authors and edits. OpenSpec has no equivalent — formatting consistency depends on LLM output and templates.
+
+## When to choose OpenSpec
+
+- You want a multi-artifact pipeline that enforces proposal → spec → design → task separation
+- You work across many different AI coding tools and need broad agent support
+- Your project needs delta specs to track evolving requirements
+- You want custom workflow schemas for your team's process
+
+## When to choose tinyspec
+
+- You want a lightweight tool that stays out of your way
+- You prefer writing specs yourself rather than having AI generate them
+- You need standalone CLI commands that work without an AI agent
+- You value auto-formatting and consistent spec structure

@@ -1,0 +1,57 @@
+# tinyspec vs SpecKit
+
+[SpecKit](https://github.com/github/spec-kit) is GitHub's official toolkit for spec-driven development. It uses structured Markdown templates and slash commands to turn specifications into implementation plans, task lists, and generated code via AI coding agents.
+
+## Overview
+
+| | tinyspec | SpecKit |
+| --- | --- | --- |
+| **Approach** | Spec authoring tool | Full lifecycle framework |
+| **Spec format** | Single Markdown file | Templated Markdown with formal IDs (FR-001, US1, CHK001) |
+| **CLI** | Native binary, full spec management | Python CLI (`specify`) for init + slash commands for workflow |
+| **Install** | Single binary | Python 3.11+ / uv |
+| **LLM dependency** | Optional | Required for core workflow |
+
+## Spec format
+
+tinyspec uses a single Markdown file per feature with four clear sections. You write the Background and Proposal yourself, and the Implementation Plan is scaffolded collaboratively with AI.
+
+SpecKit produces multiple artifact files per feature: `spec.md` (with prioritized user stories, acceptance criteria, and formal requirement IDs like FR-001), `plan.md` (technical architecture), `tasks.md` (executable task list with parallelization markers), and `checklist.md` (quality validation). It also introduces a `constitution.md` — a project-level governance document with numbered "articles" that all specs must comply with.
+
+**tinyspec's advantage:** One file, minimal structure. You can understand the entire spec at a glance without learning a formal ID scheme.
+
+**SpecKit's advantage:** The formal structure with requirement IDs, user story mapping, and cross-artifact consistency checking is valuable for large teams that need traceability.
+
+## CLI tooling
+
+tinyspec's CLI handles the full spec lifecycle independently: creating specs, formatting them, tracking task progress, and viewing status. Every command works from the terminal without an AI agent.
+
+SpecKit's CLI (`specify`) provides `init` and `check` commands. The core workflow — specifying, planning, generating tasks, implementing, and analyzing — runs as slash commands inside an AI agent session (e.g., `/speckit.specify`, `/speckit.plan`, `/speckit.implement`).
+
+**tinyspec's advantage:** Complete standalone functionality. No AI agent required for any operation.
+
+**SpecKit's advantage:** Cross-artifact analysis (`/speckit.analyze`) automatically finds contradictions, gaps, and constitution violations with severity ratings.
+
+## Workflow integration
+
+tinyspec integrates with Claude Code via three skills. Specs are plain Markdown in `.specs/`, committed alongside your code.
+
+SpecKit is designed to work with 20+ AI coding agents. It auto-creates feature branches, stores specs in branch-specific directories, and supports extension hooks (before/after implementation). The constitutional governance model enforces architectural principles across all generated artifacts.
+
+## Formatting
+
+tinyspec provides `tinyspec format` for consistent Markdown normalization. SpecKit relies on template-driven generation and a `.markdownlint-cli2.jsonc` config but has no explicit auto-format command.
+
+## When to choose SpecKit
+
+- You need formal requirement traceability (FR-001, US1, CHK001)
+- Your team benefits from constitutional governance across specs
+- You want automated cross-artifact consistency checking
+- You work with multiple AI coding tools and need broad agent support
+
+## When to choose tinyspec
+
+- You want a lightweight, single-purpose tool
+- You prefer writing specs in plain Markdown without formal ID schemes
+- You need a standalone CLI that works without an AI agent
+- You value simplicity over process formality
