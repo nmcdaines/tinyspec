@@ -1,14 +1,16 @@
 export default function Hero() {
   return (
     <section className="flex flex-col items-center px-6 pt-32 pb-24 text-center">
-      <h1 className="max-w-2xl text-5xl font-bold tracking-tight sm:text-6xl">
-        Spec-driven development
+      <h1 className="max-w-3xl text-5xl font-bold tracking-tight sm:text-6xl">
+        Specs you write,
         <br />
-        <span className="text-accent">with Claude Code</span>
+        <span className="text-accent">AI that builds</span>
       </h1>
       <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-        A tiny framework for writing structured specifications that turn ideas
-        into tracked implementation plans — powered by AI.
+        Create structured, human-readable specifications in plain Markdown.
+        Refine them with AI, track implementation progress, and amend the plan
+        as requirements evolve. No generated artifacts, no ceremony — just specs
+        that live in your repo and make sense to humans.
       </p>
       <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
         <div className="flex items-center gap-2 rounded-lg bg-code-bg px-5 py-3 font-mono text-sm">

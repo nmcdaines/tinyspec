@@ -1,8 +1,8 @@
 const features = [
   {
-    title: "Spec-driven workflow",
+    title: "Human-readable specs",
     description:
-      "Structure your ideas into Background, Proposal, and Implementation Plan sections. Break work into logical task groups with trackable subtasks.",
+      "Write structured specifications in plain Markdown with Background, Proposal, and Implementation Plan sections. No generated multi-file artifacts — one file per feature, readable without tooling.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
@@ -10,9 +10,9 @@ const features = [
     ),
   },
   {
-    title: "Claude Code integration",
+    title: "AI-assisted, not AI-dependent",
     description:
-      "Built-in slash commands — /refine to plan, /work to implement, /task for single steps. Claude reads your spec and works through it methodically.",
+      "Refine specs and implement plans with Claude Code slash commands. But your specs always work without AI — read them, edit them, and track progress from the terminal.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
@@ -20,9 +20,9 @@ const features = [
     ),
   },
   {
-    title: "Progress tracking",
+    title: "Living plans that evolve",
     description:
-      "Check off tasks as you go with a real-time TUI dashboard. See completion status across all your specs at a glance.",
+      "Check off tasks as you go, amend specs by adding new tasks as requirements change, and track progress across all your specs with a real-time TUI dashboard.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -56,11 +56,12 @@ export default function Features() {
     <section className="px-6 py-24">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-          Everything you need to plan with AI
+          Zero ceremony, full clarity
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-muted">
-          Tinyspec keeps your specs structured, your progress visible, and your
-          AI assistant focused on what matters.
+          No frameworks to learn, no agents to configure, no generated file
+          trees. Just a single binary, plain Markdown specs, and a CLI that
+          gets out of your way.
         </p>
         <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (

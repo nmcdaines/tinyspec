@@ -3,25 +3,25 @@ const comparisons = [
     name: "OpenSpec",
     slug: "openspec",
     description:
-      "Multi-artifact workflow orchestration with proposals, specs, designs, and tasks as separate versioned files.",
+      "OpenSpec generates four files per change and requires an AI agent for its core workflow. tinyspec gives you one Markdown file and a standalone CLI.",
   },
   {
     name: "SpecKit",
     slug: "speckit",
     description:
-      "GitHub's full lifecycle framework with formal requirement IDs, constitutional governance, and cross-artifact analysis.",
+      "SpecKit imposes formal ID schemes, constitutional governance, and Python dependencies. tinyspec keeps specs simple and readable.",
   },
   {
     name: "BMad METHOD",
     slug: "bmad",
     description:
-      "AI persona-driven process framework with specialized agents (PM, Architect, Developer, QA) guiding each phase.",
+      "BMad installs dozens of agent and workflow files into your project. tinyspec adds one directory and stays out of your way.",
   },
   {
     name: "GSD",
     slug: "gsd",
     description:
-      "Multi-agent orchestration with parallel execution, context engineering, and wave-based dependency resolution.",
+      "GSD generates XML tasks optimized for LLMs, not humans. tinyspec specs are plain Markdown that anyone can read and amend.",
   },
 ];
 
@@ -33,7 +33,8 @@ export default function Comparisons() {
           How tinyspec compares
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-muted">
-          See how tinyspec stacks up against popular alternatives.{" "}
+          Other tools add frameworks, agents, and generated artifacts. tinyspec
+          keeps it simple.{" "}
           <a
             href="/docs/comparisons"
             className="text-accent underline underline-offset-4 hover:text-accent-hover"
