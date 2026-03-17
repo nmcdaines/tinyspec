@@ -79,8 +79,8 @@ The existing `tinyspec format` command uses `pulldown-cmark` to normalize Markdo
 
 - [x] T.1: A spec containing a `flowchart` Mermaid block passes through `tinyspec format` with the diagram content unchanged
 - [x] T.2: A spec containing a `sequenceDiagram` block passes through `tinyspec format` unchanged
-- [ ] T.3: `tinyspec diagram <spec>` on a spec with multi-component interactions proposes at least one sequence or flow diagram
-- [ ] T.4: Accepting a proposed diagram writes the Mermaid block into the correct location in the spec (after the relevant paragraph, not at the end of the file)
-- [ ] T.5: Declining all proposed diagrams leaves the spec file unchanged
-- [ ] T.6: `tinyspec-refine` includes a Mermaid diagram in the output spec when the proposal involves inter-service interactions
-- [ ] T.7: `tinyspec-do` does not strip or skip Mermaid blocks when reading a spec for context
+- [x] T.3: `tinyspec diagram <spec>` on a spec with multi-component interactions proposes at least one sequence or flow diagram
+- [x] T.4: Accepting a proposed diagram writes the Mermaid block into the correct location in the spec (after the relevant paragraph, not at the end of the file)
+- [x] T.5: Declining all proposed diagrams leaves the spec file unchanged
+- [x] T.6: `tinyspec-refine` includes a Mermaid diagram in the output spec when the proposal involves inter-service interactions
+- [x] T.7: `tinyspec-do` does not strip or skip Mermaid blocks when reading a spec for context
