@@ -51,9 +51,9 @@ A `--skip-tests` flag on `tinyspec status` and in skills can be provided for spe
 
 # Test Plan
 
-- [ ] T.1: Create a spec with test plan tasks; verify `tinyspec status` counts them separately
-- [ ] T.2: Run `tinyspec check <spec> T.1`; verify it marks the task checked and reflects in status
-- [ ] T.3: Mark all impl tasks done but leave test tasks unchecked; verify spec is `InProgress`, not `Completed`
-- [ ] T.4: Mark all impl and test tasks done; verify spec reaches `Completed`
-- [ ] T.5: Verify dashboard detail view shows `# Test Plan` section with correct checked state
-- [ ] T.6: Verify `tinyspec-do` proceeds to test tasks after finishing impl tasks
+- [x] T.1: Create a spec with test plan tasks; verify `tinyspec status` counts them separately
+- [x] T.2: Run `tinyspec check <spec> T.1`; verify it marks the task checked and reflects in status
+- [x] T.3: Mark all impl tasks done but leave test tasks unchecked; verify spec is `InProgress`, not `Completed`
+- [x] T.4: Mark all impl and test tasks done; verify spec reaches `Completed`
+- [x] T.5: Verify dashboard detail view shows `# Test Plan` section with correct checked state
+- [x] T.6: Verify `tinyspec-do` proceeds to test tasks after finishing impl tasks
