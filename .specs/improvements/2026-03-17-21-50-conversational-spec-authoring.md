@@ -79,12 +79,12 @@ Any unresolved questions from the conversation (things explicitly left open, or 
 
 # Test Plan
 
-- [ ] T.1: `/tinyspec:chat` with no argument prompts Claude to ask what the user wants to explore
-- [ ] T.2: `/tinyspec:chat <existing-spec>` loads the spec and Claude produces a summary before opening conversation
-- [ ] T.3: `/tinyspec:chat <topic>` with no existing spec causes Claude to explore the codebase for context
-- [ ] T.4: After a multi-turn conversation, saying "write this up" triggers the summary-confirmation flow before any file is written
-- [ ] T.5: Saying "create a spec" results in a new spec file with Background, Proposal, and Implementation Plan populated from the conversation
-- [ ] T.6: Saying "update the spec" on a session started with an existing spec modifies only the relevant sections, not the whole file
-- [ ] T.7: Unresolved questions from the conversation appear in `# Open Questions` in the written spec
-- [ ] T.8: If the conversation contains two distinct ideas, Claude offers to split them into separate specs
-- [ ] T.9: `tinyspec format` runs without error on a spec that contains `# Open Questions`
+- [x] T.1: `/tinyspec:chat` with no argument prompts Claude to ask what the user wants to explore
+- [x] T.2: `/tinyspec:chat <existing-spec>` loads the spec and Claude produces a summary before opening conversation
+- [x] T.3: `/tinyspec:chat <topic>` with no existing spec causes Claude to explore the codebase for context
+- [x] T.4: After a multi-turn conversation, saying "write this up" triggers the summary-confirmation flow before any file is written
+- [x] T.5: Saying "create a spec" results in a new spec file with Background, Proposal, and Implementation Plan populated from the conversation
+- [x] T.6: Saying "update the spec" on a session started with an existing spec modifies only the relevant sections, not the whole file
+- [x] T.7: Unresolved questions from the conversation appear in `# Open Questions` in the written spec
+- [x] T.8: If the conversation contains two distinct ideas, Claude offers to split them into separate specs
+- [x] T.9: `tinyspec format` runs without error on a spec that contains `# Open Questions`
