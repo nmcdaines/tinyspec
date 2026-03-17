@@ -52,11 +52,11 @@ The existing `tinyspec format` command uses `pulldown-cmark` to normalize Markdo
 
 # Implementation Plan
 
-- [ ] A: Verify and harden formatter behavior with Mermaid blocks
+- [x] A: Verify and harden formatter behavior with Mermaid blocks
   
-  - [ ] A.1: Write integration tests that pass specs containing Mermaid fenced blocks through `tinyspec format` and assert the block content is byte-for-byte identical after formatting
-  - [ ] A.2: Test with each Mermaid diagram type (`flowchart`, `sequenceDiagram`, `stateDiagram-v2`, `erDiagram`, `graph`) to ensure none are mangled
-  - [ ] A.3: Fix any formatter issues discovered (whitespace stripping inside code blocks, fence normalization, etc.)
+  - [x] A.1: Write integration tests that pass specs containing Mermaid fenced blocks through `tinyspec format` and assert the block content is byte-for-byte identical after formatting
+  - [x] A.2: Test with each Mermaid diagram type (`flowchart`, `sequenceDiagram`, `stateDiagram-v2`, `erDiagram`, `graph`) to ensure none are mangled
+  - [x] A.3: Fix any formatter issues discovered (whitespace stripping inside code blocks, fence normalization, etc.)
 - [ ] B: Update skills to proactively include diagrams
   
   - [ ] B.1: Update `tinyspec-refine` prompt: instruct Claude to identify structural concepts during refinement and include a Mermaid block when a diagram would reduce ambiguity

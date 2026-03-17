@@ -1882,3 +1882,319 @@ fn t55_new_creates_specs_in_cwd_without_git() {
         ".specs/ should be in the current directory"
     );
 }
+
+// ─── T.56: Format preserves Mermaid flowchart block unchanged ────────────────
+
+#[test]
+fn t56_format_preserves_mermaid_flowchart() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Mermaid Flowchart
+applications:
+    -
+---
+
+# Proposal
+
+Here is a flow diagram.
+
+```mermaid
+flowchart TD
+    A[Start] --> B{Decision}
+    B -- Yes --> C[Do something]
+    B -- No --> D[Do nothing]
+    C --> E[End]
+    D --> E
+```
+
+More prose follows.
+";
+    create_sample_spec(&dir, "2025-03-01-10-00-mermaid-flowchart.md", content);
+
+    tinyspec(&dir)
+        .args(["format", "mermaid-flowchart"])
+        .assert()
+        .success();
+
+    let formatted =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-mermaid-flowchart.md"))
+            .unwrap();
+
+    assert!(
+        formatted.contains("```mermaid\nflowchart TD"),
+        "Mermaid flowchart block should be preserved"
+    );
+    assert!(
+        formatted.contains("A[Start] --> B{Decision}"),
+        "Mermaid node content should be unchanged"
+    );
+    assert!(
+        formatted.contains("B -- Yes --> C[Do something]"),
+        "Mermaid edge labels should be unchanged"
+    );
+
+    // Formatting should be idempotent
+    tinyspec(&dir)
+        .args(["format", "mermaid-flowchart"])
+        .assert()
+        .success();
+    let second =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-mermaid-flowchart.md"))
+            .unwrap();
+    assert_eq!(formatted, second, "Formatter should be idempotent for flowchart");
+}
+
+// ─── T.57: Format preserves Mermaid sequenceDiagram block unchanged ──────────
+
+#[test]
+fn t57_format_preserves_mermaid_sequence_diagram() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Mermaid Sequence
+applications:
+    -
+---
+
+# Background
+
+Request flow between services.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+    participant DB
+    Client->>Server: GET /api/data
+    Server->>DB: SELECT * FROM records
+    DB-->>Server: rows
+    Server-->>Client: 200 OK { data }
+```
+
+End of background.
+";
+    create_sample_spec(&dir, "2025-03-01-10-01-mermaid-sequence.md", content);
+
+    tinyspec(&dir)
+        .args(["format", "mermaid-sequence"])
+        .assert()
+        .success();
+
+    let formatted =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-01-mermaid-sequence.md"))
+            .unwrap();
+
+    assert!(
+        formatted.contains("```mermaid\nsequenceDiagram"),
+        "Mermaid sequenceDiagram block should be preserved"
+    );
+    assert!(
+        formatted.contains("Client->>Server: GET /api/data"),
+        "Sequence arrow syntax should be unchanged"
+    );
+    assert!(
+        formatted.contains("DB-->>Server: rows"),
+        "Return arrow syntax should be unchanged"
+    );
+
+    // Idempotent
+    tinyspec(&dir)
+        .args(["format", "mermaid-sequence"])
+        .assert()
+        .success();
+    let second =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-01-mermaid-sequence.md"))
+            .unwrap();
+    assert_eq!(formatted, second, "Formatter should be idempotent for sequenceDiagram");
+}
+
+// ─── T.58: Format preserves Mermaid stateDiagram-v2 block unchanged ──────────
+
+#[test]
+fn t58_format_preserves_mermaid_state_diagram() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Mermaid State
+applications:
+    -
+---
+
+# Proposal
+
+Spec lifecycle states.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> InProgress : start work
+    InProgress --> Completed : all tasks done
+    Completed --> [*]
+    InProgress --> Draft : reopen
+```
+
+The spec moves between states.
+";
+    create_sample_spec(&dir, "2025-03-01-10-02-mermaid-state.md", content);
+
+    tinyspec(&dir)
+        .args(["format", "mermaid-state"])
+        .assert()
+        .success();
+
+    let formatted =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-02-mermaid-state.md")).unwrap();
+
+    assert!(
+        formatted.contains("```mermaid\nstateDiagram-v2"),
+        "Mermaid stateDiagram-v2 block should be preserved"
+    );
+    assert!(
+        formatted.contains("[*] --> Draft"),
+        "State machine initial state should be unchanged"
+    );
+    assert!(
+        formatted.contains("InProgress --> Completed : all tasks done"),
+        "Transition labels should be unchanged"
+    );
+
+    // Idempotent
+    tinyspec(&dir)
+        .args(["format", "mermaid-state"])
+        .assert()
+        .success();
+    let second =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-02-mermaid-state.md")).unwrap();
+    assert_eq!(formatted, second, "Formatter should be idempotent for stateDiagram-v2");
+}
+
+// ─── T.59: Format preserves Mermaid erDiagram block unchanged ────────────────
+
+#[test]
+fn t59_format_preserves_mermaid_er_diagram() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Mermaid ER
+applications:
+    -
+---
+
+# Background
+
+Data model for the system.
+
+```mermaid
+erDiagram
+    SPEC ||--o{ TASK : contains
+    TASK {
+        string id
+        string description
+        bool checked
+    }
+    SPEC {
+        string name
+        string title
+    }
+```
+
+Entities and their relationships.
+";
+    create_sample_spec(&dir, "2025-03-01-10-03-mermaid-er.md", content);
+
+    tinyspec(&dir)
+        .args(["format", "mermaid-er"])
+        .assert()
+        .success();
+
+    let formatted =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-03-mermaid-er.md")).unwrap();
+
+    assert!(
+        formatted.contains("```mermaid\nerDiagram"),
+        "Mermaid erDiagram block should be preserved"
+    );
+    assert!(
+        formatted.contains("SPEC ||--o{ TASK : contains"),
+        "ER relationship syntax should be unchanged"
+    );
+    assert!(
+        formatted.contains("string id"),
+        "ER field definitions should be unchanged"
+    );
+
+    // Idempotent
+    tinyspec(&dir)
+        .args(["format", "mermaid-er"])
+        .assert()
+        .success();
+    let second =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-03-mermaid-er.md")).unwrap();
+    assert_eq!(formatted, second, "Formatter should be idempotent for erDiagram");
+}
+
+// ─── T.60: Format preserves Mermaid graph block unchanged ────────────────────
+
+#[test]
+fn t60_format_preserves_mermaid_graph() {
+    let dir = TempDir::new().unwrap();
+    let content = "\
+---
+tinySpec: v0
+title: Mermaid Graph
+applications:
+    -
+---
+
+# Proposal
+
+Component dependency graph.
+
+```mermaid
+graph LR
+    CLI --> spec_mod
+    spec_mod --> format_rs
+    spec_mod --> commands_rs
+    spec_mod --> templates_rs
+    format_rs --> pulldown_cmark
+```
+
+Dependencies flow left to right.
+";
+    create_sample_spec(&dir, "2025-03-01-10-04-mermaid-graph.md", content);
+
+    tinyspec(&dir)
+        .args(["format", "mermaid-graph"])
+        .assert()
+        .success();
+
+    let formatted =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-04-mermaid-graph.md")).unwrap();
+
+    assert!(
+        formatted.contains("```mermaid\ngraph LR"),
+        "Mermaid graph block should be preserved"
+    );
+    assert!(
+        formatted.contains("CLI --> spec_mod"),
+        "Graph edge syntax should be unchanged"
+    );
+    assert!(
+        formatted.contains("format_rs --> pulldown_cmark"),
+        "Leaf node should be unchanged"
+    );
+
+    // Idempotent
+    tinyspec(&dir)
+        .args(["format", "mermaid-graph"])
+        .assert()
+        .success();
+    let second =
+        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-04-mermaid-graph.md")).unwrap();
+    assert_eq!(formatted, second, "Formatter should be idempotent for graph");
+}
