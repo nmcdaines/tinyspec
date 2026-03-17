@@ -57,12 +57,12 @@ The existing `tinyspec format` command uses `pulldown-cmark` to normalize Markdo
   - [x] A.1: Write integration tests that pass specs containing Mermaid fenced blocks through `tinyspec format` and assert the block content is byte-for-byte identical after formatting
   - [x] A.2: Test with each Mermaid diagram type (`flowchart`, `sequenceDiagram`, `stateDiagram-v2`, `erDiagram`, `graph`) to ensure none are mangled
   - [x] A.3: Fix any formatter issues discovered (whitespace stripping inside code blocks, fence normalization, etc.)
-- [ ] B: Update skills to proactively include diagrams
+- [x] B: Update skills to proactively include diagrams
   
-  - [ ] B.1: Update `tinyspec-refine` prompt: instruct Claude to identify structural concepts during refinement and include a Mermaid block when a diagram would reduce ambiguity
-  - [ ] B.2: Update `tinyspec-chat` prompt similarly — when the conversation converges on an architecture or flow, include a diagram in the written spec output
-  - [ ] B.3: Update `tinyspec-do` prompt: when reading a spec before implementation, treat Mermaid blocks as authoritative design documentation (not decorative)
-  - [ ] B.4: Add guidance on diagram type selection to all relevant skills (the table from the Proposal section)
+  - [x] B.1: Update `tinyspec-refine` prompt: instruct Claude to identify structural concepts during refinement and include a Mermaid block when a diagram would reduce ambiguity
+  - [x] B.2: Update `tinyspec-chat` prompt similarly — when the conversation converges on an architecture or flow, include a diagram in the written spec output
+  - [x] B.3: Update `tinyspec-do` prompt: when reading a spec before implementation, treat Mermaid blocks as authoritative design documentation (not decorative)
+  - [x] B.4: Add guidance on diagram type selection to all relevant skills (the table from the Proposal section)
 - [ ] C: Implement `tinyspec diagram <spec-name>` command
   
   - [ ] C.1: Add `diagram` subcommand to the CLI; it is a skill-backed command (shells out to Claude), not a pure Rust implementation
