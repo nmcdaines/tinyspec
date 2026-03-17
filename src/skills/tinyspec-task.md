@@ -20,8 +20,10 @@ Your goal is to complete a specific task:
    - For each resolved application folder path, explore the directory tree and read key source files relevant to the task at hand.
    - Consider how the task's changes will interact across all referenced repositories.
    - If no `applications` field is present (or it's empty), explore only the current repository from the working directory onwards.
-3. Locate the specified task in the Implementation Plan.
-4. Implement just that task.
+3. Locate the specified task. Task IDs can be:
+   - Implementation Plan tasks: `A`, `A.1`, `B`, `B.2`, etc.
+   - Test Plan tasks: `T.1`, `T.2`, `T.1.1`, etc.
+4. Implement or verify just that task.
 5. Mark it complete with `tinyspec check <spec-name> <task-id>`.
 6. If the task has subtasks, complete and check each subtask as well.
 

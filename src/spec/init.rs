@@ -6,6 +6,7 @@ const TINYSPEC_DO_SKILL: &str = include_str!("../skills/tinyspec-do.md");
 const TINYSPEC_TASK_SKILL: &str = include_str!("../skills/tinyspec-task.md");
 const TINYSPEC_ONESHOT_SKILL: &str = include_str!("../skills/tinyspec-oneshot.md");
 const TINYSPEC_NEW_SKILL: &str = include_str!("../skills/tinyspec-new.md");
+const TINYSPEC_CHAT_SKILL: &str = include_str!("../skills/tinyspec-chat.md");
 
 fn remove_matching_entries(
     dir: &Path,
@@ -49,6 +50,7 @@ pub fn init(force: bool) -> Result<(), String> {
     let skills: &[(&str, &str)] = &[
         ("tinyspec-new", TINYSPEC_NEW_SKILL),
         ("tinyspec-refine", TINYSPEC_REFINE_SKILL),
+        ("tinyspec-chat", TINYSPEC_CHAT_SKILL),
         ("tinyspec-do", TINYSPEC_DO_SKILL),
         ("tinyspec-task", TINYSPEC_TASK_SKILL),
         ("tinyspec-oneshot", TINYSPEC_ONESHOT_SKILL),

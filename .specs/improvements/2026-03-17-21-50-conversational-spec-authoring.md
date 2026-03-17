@@ -51,31 +51,31 @@ Any unresolved questions from the conversation (things explicitly left open, or 
 
 # Implementation Plan
 
-- [ ] A: Implement the `tinyspec-chat` skill
+- [x] A: Implement the `tinyspec-chat` skill
   
-  - [ ] A.1: Create `src/skills/tinyspec-chat.md` with skill prompt
-  - [ ] A.2: Handle three starting modes: no argument (open topic), existing spec name, free-text topic
-  - [ ] A.3: When starting from an existing spec, load it with `tinyspec view` and summarize it before opening conversation
-  - [ ] A.4: When starting from a topic, explore the codebase for relevant context using the Explore agent
-  - [ ] A.5: Maintain an internal running summary throughout the conversation (not shown to user unless asked)
-- [ ] B: Implement conversation-to-spec transitions
+  - [x] A.1: Create `src/skills/tinyspec-chat.md` with skill prompt
+  - [x] A.2: Handle three starting modes: no argument (open topic), existing spec name, free-text topic
+  - [x] A.3: When starting from an existing spec, load it with `tinyspec view` and summarize it before opening conversation
+  - [x] A.4: When starting from a topic, explore the codebase for relevant context using the Explore agent
+  - [x] A.5: Maintain an internal running summary throughout the conversation (not shown to user unless asked)
+- [x] B: Implement conversation-to-spec transitions
   
-  - [ ] B.1: Detect user signals that they want to write or update a spec ("write this up", "create a spec", "update the spec", etc.)
-  - [ ] B.2: Before writing anything, present a structured summary of decisions and confirm with the user
-  - [ ] B.3: Implement "create new spec" path: derive a spec name, run `tinyspec new`, populate sections from conversation
-  - [ ] B.4: Implement "update existing spec" path: compare conversation conclusions to current spec, apply changes section by section
-  - [ ] B.5: If multiple distinct ideas emerged, offer to split into separate specs before writing
-- [ ] C: Implement `# Open Questions` section support
+  - [x] B.1: Detect user signals that they want to write or update a spec ("write this up", "create a spec", "update the spec", etc.)
+  - [x] B.2: Before writing anything, present a structured summary of decisions and confirm with the user
+  - [x] B.3: Implement "create new spec" path: derive a spec name, run `tinyspec new`, populate sections from conversation
+  - [x] B.4: Implement "update existing spec" path: compare conversation conclusions to current spec, apply changes section by section
+  - [x] B.5: If multiple distinct ideas emerged, offer to split into separate specs before writing
+- [x] C: Implement `# Open Questions` section support
   
-  - [ ] C.1: Track unresolved questions during the conversation
-  - [ ] C.2: When writing a spec, append an `# Open Questions` section if any exist
-  - [ ] C.3: When updating an existing spec that already has `# Open Questions`, merge rather than overwrite
-  - [ ] C.4: Ensure `tinyspec format` handles the new section gracefully (no parser errors)
-- [ ] D: Register the skill and update init
+  - [x] C.1: Track unresolved questions during the conversation
+  - [x] C.2: When writing a spec, append an `# Open Questions` section if any exist
+  - [x] C.3: When updating an existing spec that already has `# Open Questions`, merge rather than overwrite
+  - [x] C.4: Ensure `tinyspec format` handles the new section gracefully (no parser errors)
+- [x] D: Register the skill and update init
   
-  - [ ] D.1: Add `tinyspec-chat` to `src/spec/init.rs` alongside existing skills
-  - [ ] D.2: Run `tinyspec init --force` to install the new skill in `.claude/skills/`
-  - [ ] D.3: Update `CLAUDE.md` to document the new skill
+  - [x] D.1: Add `tinyspec-chat` to `src/spec/init.rs` alongside existing skills
+  - [x] D.2: Run `tinyspec init --force` to install the new skill in `.claude/skills/`
+  - [x] D.3: Update `CLAUDE.md` to document the new skill
 
 # Test Plan
 

@@ -19,6 +19,15 @@ The `# Test Plan` section is fully tracked alongside `# Implementation Plan`. Te
 - The dashboard detail view shows `# Test Plan` as a separate collapsible section
 - The `◑` icon (cyan) in the dashboard means: impl complete, tests still pending
 
+## Skills reference
+
+- `/tinyspec:chat [topic|spec-name]` — Start a free-form conversation before writing a spec. Supports three modes: no argument (open exploration), existing spec name (load and discuss), or free-text topic (codebase-grounded exploration). When the user says "write this up", Claude presents a decisions summary, then creates or updates the spec. Unresolved questions land in `# Open Questions`.
+- `/tinyspec:new <description>` — Create a new spec from a description.
+- `/tinyspec:refine <spec-name>` — Collaborate to refine an existing spec's structure and implementation plan.
+- `/tinyspec:do [spec-name]` — Work through all Implementation Plan and Test Plan tasks in order.
+- `/tinyspec:task <spec-name> <task-id>` — Implement a single task (supports both impl `A.1` and test `T.1` IDs).
+- `/tinyspec:oneshot [prompt]` — Execute all pending specs or generate and execute from a prompt.
+
 ## CLI commands reference
 
 - `tinyspec search <query> [--group <name>] [--status pending|in-progress|completed]` — Full-text search across spec titles and body content.

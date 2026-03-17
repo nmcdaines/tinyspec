@@ -25,5 +25,10 @@ Your goal is to work through the spec's Implementation Plan:
    c. After completing the top-level task and all its subtasks, mark it done too.
    d. Commit your progress with a descriptive commit message referencing the spec and task group.
 6. Move on to the next task group and repeat.
+7. **After all Implementation Plan tasks are complete**, work through the Test Plan:
+   a. The Test Plan uses `T`-prefixed IDs (e.g. `T.1`, `T.2`, `T.1.1`).
+   b. For each test task, perform the described verification or test.
+   c. Mark each test task done with `tinyspec check <spec-name> T.N`.
+   d. Commit test plan progress after completing all test tasks.
 
 If you encounter ambiguity or a task that requires user input, use the `AskUserQuestion` tool to present structured, selectable options rather than asking inline. Always verify your work compiles/runs before marking tasks complete.
