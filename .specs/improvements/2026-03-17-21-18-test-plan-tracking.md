@@ -25,16 +25,16 @@ A `--skip-tests` flag on `tinyspec status` and in skills can be provided for spe
 
 # Implementation Plan
 
-- [ ] A: Extend the spec parser to recognize `# Test Plan`
+- [x] A: Extend the spec parser to recognize `# Test Plan`
   
-  - [ ] A.1: Update `summary.rs` to parse `# Test Plan` into a separate `test_tasks: Vec<TaskNode>` field on `SpecSummary`
-  - [ ] A.2: Support `T` prefix for top-level test tasks and `T.N` / `T.N.N` for nested ones
-  - [ ] A.3: Ensure `tinyspec check` and `tinyspec uncheck` accept `T`\-prefixed IDs
-- [ ] B: Update status calculation
+  - [x] A.1: Update `summary.rs` to parse `# Test Plan` into a separate `test_tasks: Vec<TaskNode>` field on `SpecSummary`
+  - [x] A.2: Support `T` prefix for top-level test tasks and `T.N` / `T.N.N` for nested ones
+  - [x] A.3: Ensure `tinyspec check` and `tinyspec uncheck` accept `T`\-prefixed IDs
+- [x] B: Update status calculation
   
-  - [ ] B.1: Add `total_tests` and `checked_tests` fields to `SpecSummary`
-  - [ ] B.2: Change `Completed` status to require all test tasks checked (in addition to impl tasks)
-  - [ ] B.3: Add `--skip-tests` flag to `tinyspec status` for specs without tracked test tasks
+  - [x] B.1: Add `total_tests` and `checked_tests` fields to `SpecSummary`
+  - [x] B.2: Change `Completed` status to require all test tasks checked (in addition to impl tasks)
+  - [x] B.3: Add `--skip-tests` flag to `tinyspec status` for specs without tracked test tasks
 - [ ] C: Surface test task progress in the dashboard
   
   - [ ] C.1: Show separate impl and test progress bars (or combined with a distinct label) in the spec list view

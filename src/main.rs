@@ -107,6 +107,9 @@ enum Commands {
         /// Include archived specs
         #[arg(long)]
         include_archived: bool,
+        /// Ignore test tasks when computing completion
+        #[arg(long)]
+        skip_tests: bool,
     },
 
     /// Manage repository configuration (~/.tinyspec/config.yaml)
@@ -213,7 +216,8 @@ fn main() {
             spec_name,
             json,
             include_archived,
-        } => spec::status(spec_name.as_deref(), json, include_archived),
+            skip_tests,
+        } => spec::status(spec_name.as_deref(), json, include_archived, skip_tests),
         Commands::Config { action } => match action {
             ConfigAction::Set { repo_name, path } => spec::config_set(&repo_name, &path),
             ConfigAction::List => spec::config_list(),

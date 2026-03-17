@@ -51,8 +51,11 @@ pub struct SpecSummary {
     pub timestamp: String, // "YYYY-MM-DD HH:MM"
     pub total: u32,
     pub checked: u32,
+    pub total_tests: u32,
+    pub checked_tests: u32,
     pub status: SpecStatus,
     pub tasks: Vec<TaskNode>,
+    pub test_tasks: Vec<TaskNode>,
 }
 
 /// Extract a human-friendly timestamp from a spec filename.
@@ -66,25 +69,26 @@ fn extract_timestamp(filename: &str) -> String {
     }
 }
 
-/// Parse the Implementation Plan section into a task tree.
-pub fn parse_tasks_from_content(content: &str) -> Vec<TaskNode> {
-    let mut in_plan = false;
+/// Parse a specific headed section (e.g. `# Implementation Plan` or `# Test Plan`)
+/// into a task tree. Stops at the next top-level `#` heading.
+fn parse_section_tasks(content: &str, section_heading: &str) -> Vec<TaskNode> {
+    let mut in_section = false;
     let mut tasks: Vec<TaskNode> = Vec::new();
 
     for line in content.lines() {
         let trimmed = line.trim();
 
-        if trimmed == "# Implementation Plan" {
-            in_plan = true;
+        if trimmed == section_heading {
+            in_section = true;
             continue;
         }
 
         // Stop at next top-level heading
-        if in_plan && trimmed.starts_with("# ") {
+        if in_section && trimmed.starts_with("# ") {
             break;
         }
 
-        if !in_plan {
+        if !in_section {
             continue;
         }
 
@@ -107,7 +111,6 @@ pub fn parse_tasks_from_content(content: &str) -> Vec<TaskNode> {
         let indent = line.len() - line.trim_start().len();
 
         if indent == 0 {
-            // Top-level task
             tasks.push(TaskNode {
                 id,
                 description,
@@ -115,7 +118,6 @@ pub fn parse_tasks_from_content(content: &str) -> Vec<TaskNode> {
                 children: Vec::new(),
             });
         } else if let Some(parent) = tasks.last_mut() {
-            // Subtask
             parent.children.push(TaskNode {
                 id,
                 description,
@@ -126,6 +128,16 @@ pub fn parse_tasks_from_content(content: &str) -> Vec<TaskNode> {
     }
 
     tasks
+}
+
+/// Parse the `# Implementation Plan` section into a task tree.
+pub fn parse_tasks_from_content(content: &str) -> Vec<TaskNode> {
+    parse_section_tasks(content, "# Implementation Plan")
+}
+
+/// Parse the `# Test Plan` section into a task tree.
+pub fn parse_test_tasks_from_content(content: &str) -> Vec<TaskNode> {
+    parse_section_tasks(content, "# Test Plan")
 }
 
 /// Count total and checked tasks (including all nesting levels).
@@ -174,11 +186,14 @@ pub fn load_spec_summary(path: &Path) -> Option<SpecSummary> {
     let tasks = parse_tasks_from_content(&content);
     let (total, checked) = count_tasks(&tasks);
 
-    let status = if total == 0 {
+    let test_tasks = parse_test_tasks_from_content(&content);
+    let (total_tests, checked_tests) = count_tasks(&test_tasks);
+
+    let status = if total == 0 && total_tests == 0 {
         SpecStatus::Pending
-    } else if checked == total {
+    } else if checked == total && checked_tests == total_tests {
         SpecStatus::Completed
-    } else if checked > 0 {
+    } else if checked > 0 || checked_tests > 0 {
         SpecStatus::InProgress
     } else {
         SpecStatus::Pending
@@ -191,8 +206,11 @@ pub fn load_spec_summary(path: &Path) -> Option<SpecSummary> {
         timestamp,
         total,
         checked,
+        total_tests,
+        checked_tests,
         status,
         tasks,
+        test_tasks,
     })
 }
 
@@ -319,6 +337,60 @@ Some background.
         assert_eq!(tasks[1].id, "🚀");
         assert_eq!(tasks[1].children.len(), 1);
         assert_eq!(tasks[1].children[0].id, "🚀.1");
+    }
+
+    #[test]
+    fn parse_test_tasks_from_plan() {
+        let content = "\
+# Implementation Plan
+
+- [x] A: Impl task
+
+# Test Plan
+
+- [ ] T.1: First test
+- [x] T.2: Second test
+  - [ ] T.2.1: Sub-test
+";
+        let impl_tasks = parse_tasks_from_content(content);
+        let test_tasks = parse_test_tasks_from_content(content);
+        assert_eq!(impl_tasks.len(), 1);
+        assert_eq!(impl_tasks[0].id, "A");
+        assert_eq!(test_tasks.len(), 2);
+        assert_eq!(test_tasks[0].id, "T.1");
+        assert!(!test_tasks[0].checked);
+        assert_eq!(test_tasks[1].id, "T.2");
+        assert!(test_tasks[1].checked);
+        assert_eq!(test_tasks[1].children.len(), 1);
+        assert_eq!(test_tasks[1].children[0].id, "T.2.1");
+    }
+
+    #[test]
+    fn completed_requires_all_test_tasks_checked() {
+        // Spec with impl done but test task pending → InProgress
+        let content = "\
+# Implementation Plan
+
+- [x] A: Done
+
+# Test Plan
+
+- [ ] T.1: Not done yet
+";
+        let tasks = parse_tasks_from_content(content);
+        let test_tasks = parse_test_tasks_from_content(content);
+        let (total, checked) = count_tasks(&tasks);
+        let (total_tests, checked_tests) = count_tasks(&test_tasks);
+        let status = if total == 0 && total_tests == 0 {
+            SpecStatus::Pending
+        } else if checked == total && checked_tests == total_tests {
+            SpecStatus::Completed
+        } else if checked > 0 || checked_tests > 0 {
+            SpecStatus::InProgress
+        } else {
+            SpecStatus::Pending
+        };
+        assert_eq!(status, SpecStatus::InProgress);
     }
 
     #[test]

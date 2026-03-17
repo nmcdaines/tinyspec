@@ -400,9 +400,32 @@ pub fn check_task(name: &str, task_id: &str, check: bool) -> Result<(), String> 
     Ok(())
 }
 
-pub fn status(name: Option<&str>, json: bool, include_archived: bool) -> Result<(), String> {
+pub fn status(
+    name: Option<&str>,
+    json: bool,
+    include_archived: bool,
+    skip_tests: bool,
+) -> Result<(), String> {
     use super::archive::collect_spec_files_with_archived;
     use super::summary::load_spec_summary;
+
+    let format_status = |summary: &super::summary::SpecSummary| -> String {
+        if skip_tests || summary.total_tests == 0 {
+            format!(
+                "{}: {}/{} tasks complete",
+                summary.name, summary.checked, summary.total
+            )
+        } else {
+            format!(
+                "{}: {}/{} impl, {}/{} tests",
+                summary.name,
+                summary.checked,
+                summary.total,
+                summary.checked_tests,
+                summary.total_tests
+            )
+        }
+    };
 
     match name {
         Some(name) => {
@@ -414,10 +437,7 @@ pub fn status(name: Option<&str>, json: bool, include_archived: bool) -> Result<
                     .map_err(|e| format!("Failed to serialize JSON: {e}"))?;
                 println!("{out}");
             } else {
-                println!(
-                    "{}: {}/{} tasks complete",
-                    summary.name, summary.checked, summary.total
-                );
+                println!("{}", format_status(&summary));
             }
         }
         None => {
@@ -447,10 +467,7 @@ pub fn status(name: Option<&str>, json: bool, include_archived: bool) -> Result<
             } else {
                 for path in &files {
                     if let Some(summary) = load_spec_summary(path) {
-                        println!(
-                            "{}: {}/{} tasks complete",
-                            summary.name, summary.checked, summary.total
-                        );
+                        println!("{}", format_status(&summary));
                     }
                 }
             }
