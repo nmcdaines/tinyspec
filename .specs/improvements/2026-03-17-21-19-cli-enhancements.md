@@ -38,34 +38,34 @@ Exit code 0 if clean, non-zero if errors found (warnings don't affect exit code)
 
 # Implementation Plan
 
-- [ ] A: Implement `tinyspec search`
+- [x] A: Implement `tinyspec search`
   
-  - [ ] A.1: Add `search` subcommand to `main.rs` with `query`, `--group`, and `--status` options
-  - [ ] A.2: Walk all spec files, load title from front matter and full body text
-  - [ ] A.3: Case-insensitive substring match against title and body; collect matching lines with context
-  - [ ] A.4: Print results grouped by spec name with match snippets
-- [ ] B: Implement `--json` output flag
+  - [x] A.1: Add `search` subcommand to `main.rs` with `query`, `--group`, and `--status` options
+  - [x] A.2: Walk all spec files, load title from front matter and full body text
+  - [x] A.3: Case-insensitive substring match against title and body; collect matching lines with context
+  - [x] A.4: Print results grouped by spec name with match snippets
+- [x] B: Implement `--json` output flag
   
-  - [ ] B.1: Add `--json` flag to `list`, `status`, and `view` subcommands
-  - [ ] B.2: Derive or implement `serde::Serialize` on `SpecSummary`, `TaskNode`, and front matter types
-  - [ ] B.3: Serialize and print JSON to stdout when flag is present; suppress all other output
-- [ ] C: Implement `tinyspec archive` and `tinyspec unarchive`
+  - [x] B.1: Add `--json` flag to `list`, `status`, and `view` subcommands
+  - [x] B.2: Derive or implement `serde::Serialize` on `SpecSummary`, `TaskNode`, and front matter types
+  - [x] B.3: Serialize and print JSON to stdout when flag is present; suppress all other output
+- [x] C: Implement `tinyspec archive` and `tinyspec unarchive`
   
-  - [ ] C.1: Add `archive` and `unarchive` subcommands
-  - [ ] C.2: `archive`: move spec file to `.specs/archive/`, preserving group subdirectory structure
-  - [ ] C.3: `unarchive`: move spec file back to its original group folder
-  - [ ] C.4: Exclude `.specs/archive/` from all spec discovery by default
-  - [ ] C.5: Add `--include-archived` flag to `list`, `status`, `dashboard`
-- [ ] D: Implement `tinyspec lint`
+  - [x] C.1: Add `archive` and `unarchive` subcommands
+  - [x] C.2: `archive`: move spec file to `.specs/archive/`, preserving group subdirectory structure
+  - [x] C.3: `unarchive`: move spec file back to its original group folder
+  - [x] C.4: Exclude `.specs/archive/` from all spec discovery by default
+  - [x] C.5: Add `--include-archived` flag to `list`, `status`, `dashboard`
+- [x] D: Implement `tinyspec lint`
   
-  - [ ] D.1: Add `lint` subcommand accepting optional spec name or `--all`
-  - [ ] D.2: Implement checks: required sections, empty sections, sequential task IDs, configured applications
-  - [ ] D.3: Categorize findings as `error` or `warning`; print with spec name and line reference where possible
-  - [ ] D.4: Exit non-zero on any errors; exit 0 if only warnings or clean
-- [ ] E: Shell completion and documentation
+  - [x] D.1: Add `lint` subcommand accepting optional spec name or `--all`
+  - [x] D.2: Implement checks: required sections, empty sections, sequential task IDs, configured applications
+  - [x] D.3: Categorize findings as `error` or `warning`; print with spec name and line reference where possible
+  - [x] D.4: Exit non-zero on any errors; exit 0 if only warnings or clean
+- [x] E: Shell completion and documentation
   
-  - [ ] E.1: Extend shell completion to cover new subcommands and flags
-  - [ ] E.2: Update `CLAUDE.md` with new command descriptions
+  - [x] E.1: Extend shell completion to cover new subcommands and flags
+  - [x] E.2: Update `CLAUDE.md` with new command descriptions
 
 # Test Plan
 

@@ -2,9 +2,11 @@ use std::cmp::Ordering;
 use std::fs;
 use std::path::Path;
 
+use serde::Serialize;
+
 use super::{collect_spec_files, extract_spec_name, parse_front_matter, specs_dir};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TaskNode {
     pub id: String,
     pub description: String,
@@ -12,7 +14,7 @@ pub struct TaskNode {
     pub children: Vec<TaskNode>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub enum SpecStatus {
     InProgress,
     Pending,
@@ -41,7 +43,7 @@ impl PartialOrd for SpecStatus {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SpecSummary {
     pub name: String,
     pub title: String,
@@ -65,7 +67,7 @@ fn extract_timestamp(filename: &str) -> String {
 }
 
 /// Parse the Implementation Plan section into a task tree.
-fn parse_tasks(content: &str) -> Vec<TaskNode> {
+pub fn parse_tasks_from_content(content: &str) -> Vec<TaskNode> {
     let mut in_plan = false;
     let mut tasks: Vec<TaskNode> = Vec::new();
 
@@ -169,7 +171,7 @@ pub fn load_spec_summary(path: &Path) -> Option<SpecSummary> {
         }
     };
 
-    let tasks = parse_tasks(&content);
+    let tasks = parse_tasks_from_content(&content);
     let (total, checked) = count_tasks(&tasks);
 
     let status = if total == 0 {
@@ -241,7 +243,7 @@ Some background.
 
 # Test Plan
 ";
-        let tasks = parse_tasks(content);
+        let tasks = parse_tasks_from_content(content);
         assert_eq!(tasks.len(), 2);
         assert_eq!(tasks[0].id, "A");
         assert!(!tasks[0].checked);
@@ -305,7 +307,7 @@ Some background.
 
 # Test Plan
 ";
-        let tasks = parse_tasks(content);
+        let tasks = parse_tasks_from_content(content);
         assert_eq!(tasks.len(), 2);
         assert_eq!(tasks[0].id, "🧪");
         assert!(!tasks[0].checked);

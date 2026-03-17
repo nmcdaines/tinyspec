@@ -2,6 +2,9 @@ use std::fs;
 use std::io::{self, BufRead, Write};
 use std::process::Command;
 
+use serde::Serialize;
+
+
 use chrono::Local;
 
 use super::config::{config_path, load_config};
@@ -139,16 +142,35 @@ applications:
     Ok(())
 }
 
-pub fn list() -> Result<(), String> {
-    let mut files = collect_spec_files()?;
+pub fn list(json: bool, include_archived: bool) -> Result<(), String> {
+    use super::archive::collect_spec_files_with_archived;
+    use super::summary::load_spec_summary;
+
+    let mut files = if include_archived {
+        collect_spec_files_with_archived()?
+    } else {
+        collect_spec_files()?
+    };
 
     if files.is_empty() {
-        println!("No specs found.");
+        if json {
+            println!("[]");
+        } else {
+            println!("No specs found.");
+        }
         return Ok(());
     }
 
     // Sort by filename (natural date ordering due to timestamp prefix)
     files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
+
+    if json {
+        let summaries: Vec<_> = files.iter().filter_map(|p| load_spec_summary(p)).collect();
+        let out = serde_json::to_string_pretty(&summaries)
+            .map_err(|e| format!("Failed to serialize JSON: {e}"))?;
+        println!("{out}");
+        return Ok(());
+    }
 
     // Group by parent directory
     let specs_root = specs_dir();
@@ -203,9 +225,43 @@ pub fn list() -> Result<(), String> {
     Ok(())
 }
 
-pub fn view(name: &str) -> Result<(), String> {
+pub fn view(name: &str, json: bool) -> Result<(), String> {
+    use super::summary::load_spec_summary;
+
     let path = find_spec(name)?;
     let content = fs::read_to_string(&path).map_err(|e| format!("Failed to read spec: {e}"))?;
+
+    if json {
+        #[derive(Serialize)]
+        struct ViewJson {
+            name: String,
+            title: Option<String>,
+            applications: Vec<String>,
+            body: String,
+            tasks: Vec<super::summary::TaskNode>,
+        }
+
+        let fm = parse_front_matter(&content);
+        let title = fm.as_ref().and_then(|f| f.title.clone());
+        let applications = fm
+            .map(|f| f.applications.into_iter().filter(|a| !a.is_empty()).collect())
+            .unwrap_or_default();
+        let summary = load_spec_summary(&path);
+        let tasks = summary.map(|s| s.tasks).unwrap_or_default();
+
+        let view_json = ViewJson {
+            name: name.to_string(),
+            title,
+            applications,
+            body: content.clone(),
+            tasks,
+        };
+
+        let out = serde_json::to_string_pretty(&view_json)
+            .map_err(|e| format!("Failed to serialize JSON: {e}"))?;
+        println!("{out}");
+        return Ok(());
+    }
 
     // Parse frontmatter to check for application references
     let apps: Vec<String> = parse_front_matter(&content)
@@ -344,7 +400,8 @@ pub fn check_task(name: &str, task_id: &str, check: bool) -> Result<(), String> 
     Ok(())
 }
 
-pub fn status(name: Option<&str>) -> Result<(), String> {
+pub fn status(name: Option<&str>, json: bool, include_archived: bool) -> Result<(), String> {
+    use super::archive::collect_spec_files_with_archived;
     use super::summary::load_spec_summary;
 
     match name {
@@ -352,27 +409,49 @@ pub fn status(name: Option<&str>) -> Result<(), String> {
             let path = find_spec(name)?;
             let summary =
                 load_spec_summary(&path).ok_or_else(|| format!("Failed to load spec '{name}'"))?;
-            println!(
-                "{}: {}/{} tasks complete",
-                summary.name, summary.checked, summary.total
-            );
+            if json {
+                let out = serde_json::to_string_pretty(&summary)
+                    .map_err(|e| format!("Failed to serialize JSON: {e}"))?;
+                println!("{out}");
+            } else {
+                println!(
+                    "{}: {}/{} tasks complete",
+                    summary.name, summary.checked, summary.total
+                );
+            }
         }
         None => {
-            let mut files = collect_spec_files()?;
+            let mut files = if include_archived {
+                collect_spec_files_with_archived()?
+            } else {
+                collect_spec_files()?
+            };
 
             if files.is_empty() {
-                println!("No specs found.");
+                if json {
+                    println!("[]");
+                } else {
+                    println!("No specs found.");
+                }
                 return Ok(());
             }
 
             files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
 
-            for path in &files {
-                if let Some(summary) = load_spec_summary(path) {
-                    println!(
-                        "{}: {}/{} tasks complete",
-                        summary.name, summary.checked, summary.total
-                    );
+            if json {
+                let summaries: Vec<_> =
+                    files.iter().filter_map(|p| load_spec_summary(p)).collect();
+                let out = serde_json::to_string_pretty(&summaries)
+                    .map_err(|e| format!("Failed to serialize JSON: {e}"))?;
+                println!("{out}");
+            } else {
+                for path in &files {
+                    if let Some(summary) = load_spec_summary(path) {
+                        println!(
+                            "{}: {}/{} tasks complete",
+                            summary.name, summary.checked, summary.total
+                        );
+                    }
                 }
             }
         }

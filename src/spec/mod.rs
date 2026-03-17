@@ -1,16 +1,22 @@
+pub(crate) mod archive;
 mod commands;
 mod config;
 pub(crate) mod dashboard;
 mod format;
 mod init;
+mod lint;
+mod search;
 pub(crate) mod summary;
 pub(crate) mod templates;
 
 // Re-export public API (keeps `spec::function_name` working from main.rs)
+pub use archive::{archive_all_completed, archive_spec, unarchive_spec};
 pub use commands::{check_task, delete, edit, list, new_spec, status, view};
 pub use config::{config_list, config_remove, config_set};
 pub use format::{format_all_specs, format_spec};
 pub use init::init;
+pub use lint::lint;
+pub use search::search;
 pub use templates::list_templates;
 
 use std::fs;
@@ -77,8 +83,8 @@ pub(crate) fn collect_spec_files() -> Result<Vec<PathBuf>, String> {
         let entry = entry.map_err(|e| format!("Failed to read directory entry: {e}"))?;
         let path = entry.path();
         if path.is_dir() {
-            // Skip the templates directory — it holds spec templates, not specs
-            if path.file_name().is_some_and(|n| n == "templates") {
+            // Skip the templates and archive directories
+            if path.file_name().is_some_and(|n| n == "templates" || n == "archive") {
                 continue;
             }
             // One level of subdirectories

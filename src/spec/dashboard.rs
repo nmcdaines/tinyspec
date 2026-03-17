@@ -13,7 +13,8 @@ use ratatui::prelude::*;
 use ratatui::widgets::*;
 
 use super::specs_dir;
-use super::summary::{SpecStatus, SpecSummary, load_all_summaries};
+use super::archive::collect_spec_files_with_archived;
+use super::summary::{SpecStatus, SpecSummary, load_all_summaries, load_spec_summary};
 
 // ---------------------------------------------------------------------------
 // Display model
@@ -55,10 +56,11 @@ struct App {
     mode: Mode,
     detail: DetailState,
     should_quit: bool,
+    include_archived: bool,
 }
 
 impl App {
-    fn new() -> Self {
+    fn new(include_archived: bool) -> Self {
         let mut app = App {
             specs: Vec::new(),
             display_items: Vec::new(),
@@ -71,13 +73,35 @@ impl App {
                 selected: 0,
             },
             should_quit: false,
+            include_archived,
         };
         app.reload();
         app
     }
 
     fn reload(&mut self) {
-        self.specs = load_all_summaries().unwrap_or_default();
+        self.specs = if self.include_archived {
+            let files = collect_spec_files_with_archived().unwrap_or_default();
+            let mut summaries: Vec<SpecSummary> =
+                files.iter().filter_map(|p| load_spec_summary(p)).collect();
+            summaries.sort_by(|a, b| {
+                let a_done = a.status == SpecStatus::Completed;
+                let b_done = b.status == SpecStatus::Completed;
+                a_done
+                    .cmp(&b_done)
+                    .then_with(|| a.group.cmp(&b.group))
+                    .then_with(|| {
+                        if a_done && b_done {
+                            b.timestamp.cmp(&a.timestamp)
+                        } else {
+                            a.timestamp.cmp(&b.timestamp)
+                        }
+                    })
+            });
+            summaries
+        } else {
+            load_all_summaries().unwrap_or_default()
+        };
         self.build_display_items();
 
         // Clamp list selection
@@ -212,7 +236,7 @@ enum DetailRow {
 // Entry point
 // ---------------------------------------------------------------------------
 
-pub fn run() -> Result<(), String> {
+pub fn run(include_archived: bool) -> Result<(), String> {
     if !io::stdout().is_terminal() {
         return Err("Dashboard requires an interactive terminal".into());
     }
@@ -227,7 +251,7 @@ pub fn run() -> Result<(), String> {
     let (tx, rx) = mpsc::channel();
     let mut _watcher = setup_watcher(tx);
 
-    let mut app = App::new();
+    let mut app = App::new(include_archived);
     let result = main_loop(&mut terminal, &mut app, &rx);
 
     // Restore terminal
