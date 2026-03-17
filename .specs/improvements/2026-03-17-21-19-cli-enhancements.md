@@ -69,12 +69,12 @@ Exit code 0 if clean, non-zero if errors found (warnings don't affect exit code)
 
 # Test Plan
 
-- [ ] T.1: `tinyspec search foo` returns specs whose title or body contains "foo"
-- [ ] T.2: `tinyspec search foo --status completed` returns only completed matches
-- [ ] T.3: `tinyspec list --json` returns valid JSON array with expected fields for all specs
-- [ ] T.4: `tinyspec status <spec> --json` returns full task tree with `checked` booleans
-- [ ] T.5: `tinyspec archive <spec>` moves the file to `.specs/archive/`; spec no longer appears in `tinyspec list`
-- [ ] T.6: `tinyspec unarchive <spec>` moves it back; spec reappears in `tinyspec list`
-- [ ] T.7: `tinyspec lint` on a spec missing `# Proposal` exits non-zero with a clear error message
-- [ ] T.8: `tinyspec lint` on a valid spec exits 0
-- [ ] T.9: `tinyspec lint --all` reports issues across all specs
+- [x] T.1: `tinyspec search foo` returns specs whose title or body contains "foo"
+- [x] T.2: `tinyspec search foo --status completed` returns only completed matches
+- [x] T.3: `tinyspec list --json` returns valid JSON array with expected fields for all specs
+- [x] T.4: `tinyspec status <spec> --json` returns full task tree with `checked` booleans
+- [x] T.5: `tinyspec archive <spec>` moves the file to `.specs/archive/`; spec no longer appears in `tinyspec list`
+- [x] T.6: `tinyspec unarchive <spec>` moves it back; spec reappears in `tinyspec list`
+- [x] T.7: `tinyspec lint` on a spec missing `# Proposal` exits non-zero with a clear error message
+- [x] T.8: `tinyspec lint` on a valid spec exits 0
+- [x] T.9: `tinyspec lint --all` reports issues across all specs
