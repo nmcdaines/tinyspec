@@ -77,8 +77,8 @@ The existing `tinyspec format` command uses `pulldown-cmark` to normalize Markdo
 
 # Test Plan
 
-- [ ] T.1: A spec containing a `flowchart` Mermaid block passes through `tinyspec format` with the diagram content unchanged
-- [ ] T.2: A spec containing a `sequenceDiagram` block passes through `tinyspec format` unchanged
+- [x] T.1: A spec containing a `flowchart` Mermaid block passes through `tinyspec format` with the diagram content unchanged
+- [x] T.2: A spec containing a `sequenceDiagram` block passes through `tinyspec format` unchanged
 - [ ] T.3: `tinyspec diagram <spec>` on a spec with multi-component interactions proposes at least one sequence or flow diagram
 - [ ] T.4: Accepting a proposed diagram writes the Mermaid block into the correct location in the spec (after the relevant paragraph, not at the end of the file)
 - [ ] T.5: Declining all proposed diagrams leaves the spec file unchanged
