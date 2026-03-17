@@ -106,3 +106,28 @@ Any question that was raised but not resolved during the conversation belongs in
 ```
 
 When updating a spec that already has `# Open Questions`, read the existing entries and merge — don't duplicate questions that are already listed.
+
+---
+
+## Diagram guidance
+
+When the conversation converges on an architecture, flow, or data model, include a Mermaid diagram in the written spec output. Don't ask permission — embed the diagram the same way a good technical writer would include a figure. If the user doesn't want it, they can remove it.
+
+Include a diagram when:
+
+- The proposal involves more than two components interacting → use `sequenceDiagram` or `flowchart`
+- There is a described state machine or lifecycle → use `stateDiagram-v2`
+- The conversation describes a data schema → use `erDiagram`
+- The implementation plan has a dependency graph among task groups → use `graph`
+
+**Diagram type selection:**
+
+|Diagram type|When to use|
+|------------|-----------|
+|`flowchart`|Decision logic, data pipelines, process flow|
+|`sequenceDiagram`|Request/response flows, inter-service calls, API interactions|
+|`stateDiagram-v2`|State machines, spec lifecycle, task status transitions|
+|`erDiagram`|Data models, schema relationships|
+|`graph`|Dependency graphs, component maps|
+
+Place diagrams inline in the spec section they illustrate — immediately after the prose paragraph they relate to, not in a separate section. Use fenced code blocks with the `mermaid` language tag.

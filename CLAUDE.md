@@ -38,3 +38,24 @@ The `# Test Plan` section is fully tracked alongside `# Implementation Plan`. Te
 - `tinyspec unarchive <spec>` — Move a spec back from the archive to its original group.
 - `tinyspec lint [<spec>|--all]` — Validate spec health (missing sections, empty sections, non-sequential IDs, unconfigured applications). Exits non-zero on errors.
 - `tinyspec dashboard [--include-archived]` — Real-time TUI dashboard.
+- `tinyspec hooks test <event>` — Fire a named event with dummy context to test hook configuration.
+
+## Hooks
+
+Hooks let you run shell commands in response to tinyspec lifecycle events. Configure them in `~/.tinyspec/config.yaml`:
+
+```yaml
+hooks:
+  on_spec_complete:
+    - 'echo "Spec $TINYSPEC_SPEC_TITLE completed"'
+  on_task_check:
+    - './scripts/update-dashboard.sh'
+```
+
+Project-level hooks can also be defined in `.tinyspec.yaml` at the repo root — they run before user-level hooks.
+
+**Events:** `on_task_check`, `on_task_uncheck`, `on_spec_complete`, `on_spec_start`, `on_spec_create`
+
+**Environment variables:** `TINYSPEC_EVENT`, `TINYSPEC_SPEC`, `TINYSPEC_SPEC_TITLE`, `TINYSPEC_SPEC_GROUP`, `TINYSPEC_TASK_ID`, `TINYSPEC_SPEC_PATH`
+
+Hook failures (non-zero exit) print a warning but do not block the triggering command. Use `--no-hooks` on `check`, `uncheck`, or `new` to skip hooks for a single invocation.

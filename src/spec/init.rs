@@ -70,6 +70,16 @@ pub fn init(force: bool) -> Result<(), String> {
         }
     }
 
+    // Hooks config example
+    println!();
+    println!("Hooks config (~/.tinyspec/config.yaml):");
+    println!("  hooks:");
+    println!("    on_spec_complete:");
+    println!("      - 'echo \"Spec $TINYSPEC_SPEC_TITLE completed\"'");
+    println!("    on_task_check:");
+    println!("      - './scripts/update-dashboard.sh'");
+    println!("  Run `tinyspec hooks test <event>` to verify hook configuration.");
+
     // Shell completion instructions
     println!();
     println!("Shell completion setup:");

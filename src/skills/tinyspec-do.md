@@ -22,6 +22,7 @@ If no matching spec is found, list available specs with `tinyspec list` and ask 
 ## Setup
 
 1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal). This command resolves application references to folder paths automatically.
+   - **Mermaid diagrams are authoritative design documentation.** If the spec contains Mermaid fenced code blocks (flowchart, sequenceDiagram, stateDiagram-v2, erDiagram, graph), read them carefully — they describe the intended architecture, data flow, or component relationships. Implement according to the diagram, not in spite of it. Never skip or strip Mermaid blocks when reading a spec for context.
    - If `tinyspec view` fails with a config error, inform the user that they need to configure repository paths with `tinyspec config set <repo-name> <path>` and stop.
 2. If the spec references applications (listed in the `applications` frontmatter field), explore each referenced repository before beginning work:
    - For each resolved application folder path, explore the directory tree and read key source files to understand the codebase structure, architecture, and patterns.
@@ -73,3 +74,17 @@ After all Implementation Plan tasks are complete, work through the Test Plan:
 4. Commit test plan progress after completing all test tasks.
 
 If you encounter ambiguity or a task that requires user input, use the `AskUserQuestion` tool to present structured, selectable options rather than asking inline. Always verify your work compiles/runs before marking tasks complete.
+
+## Mermaid diagram reference
+
+Specs may contain Mermaid diagrams in fenced code blocks. These are authoritative design documentation — they define intended behavior, not just decoration.
+
+|Diagram type|What it describes|
+|------------|----------------|
+|`flowchart`|Decision logic, data pipelines, process flow|
+|`sequenceDiagram`|Request/response flows, inter-service calls, API interactions|
+|`stateDiagram-v2`|State machines, lifecycle, task status transitions|
+|`erDiagram`|Data models, schema relationships|
+|`graph`|Dependency graphs, component maps|
+
+When a spec contains one of these diagrams, treat it as the definitive design for the relevant task group and implement accordingly.
