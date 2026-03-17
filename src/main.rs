@@ -180,6 +180,13 @@ enum Commands {
         #[command(subcommand)]
         action: HooksAction,
     },
+
+    /// Suggest Mermaid diagram additions for a spec (skill-backed command)
+    Diagram {
+        /// Spec name
+        #[arg(add = ArgValueCompleter::new(spec::complete_spec_names))]
+        spec_name: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -296,6 +303,7 @@ fn main() {
         Commands::Hooks { action } => match action {
             HooksAction::Test { event } => spec::hooks_test(&event),
         },
+        Commands::Diagram { spec_name } => spec::diagram(&spec_name),
     };
 
     if let Err(e) = result {

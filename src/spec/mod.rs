@@ -12,7 +12,7 @@ pub(crate) mod templates;
 
 // Re-export public API (keeps `spec::function_name` working from main.rs)
 pub use archive::{archive_all_completed, archive_spec, unarchive_spec};
-pub use commands::{check_task, check_task_no_hooks, delete, edit, list, new_spec,
+pub use commands::{check_task, check_task_no_hooks, delete, diagram, edit, list, new_spec,
     new_spec_with_hooks, status, view};
 pub use config::{config_list, config_remove, config_set};
 pub use format::{format_all_specs, format_spec};

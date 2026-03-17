@@ -133,7 +133,12 @@ applications:
 
 # Proposal
 
-
+<!-- Add a Mermaid diagram here when the proposal involves interacting components, a state machine, data schema, or dependency graph. Example:
+```mermaid
+flowchart LR
+    A[Input] --> B[Process] --> C[Output]
+```
+-->
 
 # Implementation Plan
 
@@ -571,5 +576,28 @@ pub fn status(
             }
         }
     }
+    Ok(())
+}
+
+/// Skill-backed command: suggests Mermaid diagram additions for a spec.
+///
+/// This command validates the spec exists and prints guidance directing the
+/// user to the `/tinyspec:diagram` Claude skill, which does the actual work
+/// (reads the spec, proposes diagrams, writes accepted ones).
+pub fn diagram(name: &str) -> Result<(), String> {
+    // Validate the spec exists
+    let path = find_spec(name)?;
+    let filename = path.file_name().unwrap().to_string_lossy();
+
+    println!("Spec: {filename}");
+    println!();
+    println!("tinyspec diagram is a skill-backed command.");
+    println!("Run it through Claude Code with:");
+    println!();
+    println!("  /tinyspec:diagram {name}");
+    println!();
+    println!("Claude will analyze the spec's prose, identify sections that benefit");
+    println!("from visualization, and propose Mermaid blocks with rationale for each.");
+
     Ok(())
 }

@@ -63,17 +63,17 @@ The existing `tinyspec format` command uses `pulldown-cmark` to normalize Markdo
   - [x] B.2: Update `tinyspec-chat` prompt similarly — when the conversation converges on an architecture or flow, include a diagram in the written spec output
   - [x] B.3: Update `tinyspec-do` prompt: when reading a spec before implementation, treat Mermaid blocks as authoritative design documentation (not decorative)
   - [x] B.4: Add guidance on diagram type selection to all relevant skills (the table from the Proposal section)
-- [ ] C: Implement `tinyspec diagram <spec-name>` command
+- [x] C: Implement `tinyspec diagram <spec-name>` command
   
-  - [ ] C.1: Add `diagram` subcommand to the CLI; it is a skill-backed command (shells out to Claude), not a pure Rust implementation
-  - [ ] C.2: The skill reads the spec with `tinyspec view`, analyzes prose sections for visualization opportunities, and proposes Mermaid blocks with rationale
-  - [ ] C.3: Present proposals to the user with `AskUserQuestion` — each proposed diagram is shown with its Mermaid source and a yes/no choice
-  - [ ] C.4: Write accepted diagrams into the spec at the appropriate location (after the relevant paragraph)
-  - [ ] C.5: Run `tinyspec format <spec-name>` after writing
-- [ ] D: Update templates and documentation
+  - [x] C.1: Add `diagram` subcommand to the CLI; it is a skill-backed command (shells out to Claude), not a pure Rust implementation
+  - [x] C.2: The skill reads the spec with `tinyspec view`, analyzes prose sections for visualization opportunities, and proposes Mermaid blocks with rationale
+  - [x] C.3: Present proposals to the user with `AskUserQuestion` — each proposed diagram is shown with its Mermaid source and a yes/no choice
+  - [x] C.4: Write accepted diagrams into the spec at the appropriate location (after the relevant paragraph)
+  - [x] C.5: Run `tinyspec format <spec-name>` after writing
+- [x] D: Update templates and documentation
   
-  - [ ] D.1: Update the default spec template to include a commented example of a Mermaid block in the Proposal section
-  - [ ] D.2: Update `CLAUDE.md` to document the diagram convention and the `tinyspec diagram` command
+  - [x] D.1: Update the default spec template to include a commented example of a Mermaid block in the Proposal section
+  - [x] D.2: Update `CLAUDE.md` to document the diagram convention and the `tinyspec diagram` command
 
 # Test Plan
 

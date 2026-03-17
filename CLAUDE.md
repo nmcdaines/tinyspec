@@ -38,7 +38,20 @@ The `# Test Plan` section is fully tracked alongside `# Implementation Plan`. Te
 - `tinyspec unarchive <spec>` — Move a spec back from the archive to its original group.
 - `tinyspec lint [<spec>|--all]` — Validate spec health (missing sections, empty sections, non-sequential IDs, unconfigured applications). Exits non-zero on errors.
 - `tinyspec dashboard [--include-archived]` — Real-time TUI dashboard.
+
+## Diagrams
+
+Specs can include [Mermaid](https://mermaid.js.org/) diagrams as fenced code blocks (` ```mermaid `). These are rendered by GitHub and most markdown viewers, diff cleanly, and can be authored by Claude.
+
+**When to include a diagram:**
+- The proposal involves 2+ components interacting → `sequenceDiagram` or `flowchart`
+- There's a state machine or lifecycle → `stateDiagram-v2`
+- The background describes a data schema → `erDiagram`
+- Task groups have dependencies → `graph`
+
+Place diagrams inline in `# Background` or `# Proposal` immediately after the prose they illustrate. Use `tinyspec diagram <spec>` or `/tinyspec:diagram <spec>` to get Claude to suggest diagram additions for an existing spec.
 - `tinyspec hooks test <event>` — Fire a named event with dummy context to test hook configuration.
+- `tinyspec diagram <spec>` — Skill-backed command: analyze the spec's prose and propose Mermaid diagram additions. Runs via `/tinyspec:diagram <spec>` in Claude Code.
 
 ## Hooks
 
