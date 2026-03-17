@@ -127,10 +127,12 @@ applications:
 
 # Implementation Plan
 
-
+- [ ] A:
 
 # Test Plan
 
+- [ ] T.1:
+- [ ] T.2:
 "
             )
         }

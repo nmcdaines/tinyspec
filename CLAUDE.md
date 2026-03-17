@@ -8,6 +8,17 @@ After directly editing a spec file (outside of `tinyspec` commands), always run 
 
 Commands like `tinyspec new`, `tinyspec check`, and `tinyspec uncheck` auto-format automatically.
 
+## Test plan tracking
+
+The `# Test Plan` section is fully tracked alongside `# Implementation Plan`. Test tasks use `T`-prefixed IDs (`T.1`, `T.2`, `T.1.1`).
+
+- `tinyspec check <spec> T.1` marks a test task done
+- `tinyspec status <spec>` shows `N/M impl, P/Q tests` when test tasks are present
+- A spec only reaches `Completed` status when **all** impl tasks and all test tasks are checked
+- `tinyspec status --skip-tests` ignores test tasks in the completion count (useful for specs that use the Test Plan as freeform notes)
+- The dashboard detail view shows `# Test Plan` as a separate collapsible section
+- The `◑` icon (cyan) in the dashboard means: impl complete, tests still pending
+
 ## CLI commands reference
 
 - `tinyspec search <query> [--group <name>] [--status pending|in-progress|completed]` — Full-text search across spec titles and body content.

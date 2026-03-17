@@ -17,8 +17,10 @@ Your goal is to complete a specific task:
 1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal, Implementation Plan). This command resolves application references to folder paths automatically.
    - If `tinyspec view` fails with a config error, inform the user that they need to configure repository paths with `tinyspec config set <repo-name> <path>` and stop.
    - If the spec references multiple applications, use the `AskUserQuestion` tool to ask the user which repositories to focus on before proceeding.
-2. Locate the specified task in the Implementation Plan.
-3. Implement just that task.
+2. Locate the specified task. Task IDs can be:
+   - Implementation Plan tasks: `A`, `A.1`, `B`, `B.2`, etc.
+   - Test Plan tasks: `T.1`, `T.2`, `T.1.1`, etc.
+3. Implement or verify just that task.
 4. Mark it complete with `tinyspec check <spec-name> <task-id>`.
 5. If the task has subtasks, complete and check each subtask as well.
 

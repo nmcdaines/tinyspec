@@ -40,14 +40,14 @@ A `--skip-tests` flag on `tinyspec status` and in skills can be provided for spe
   - [x] C.1: Show separate impl and test progress bars (or combined with a distinct label) in the spec list view
   - [x] C.2: Show `# Test Plan` tasks under a distinct heading in the detail view, collapsible independently from the impl plan
   - [x] C.3: Distinguish between "impl done, tests pending" and "fully complete" visually
-- [ ] D: Update the `tinyspec-do` and `tinyspec-task` skills
+- [x] D: Update the `tinyspec-do` and `tinyspec-task` skills
   
-  - [ ] D.1: After completing all impl tasks, prompt Claude to work through the test plan tasks
-  - [ ] D.2: Teach `tinyspec-task` to accept `T`\-prefixed task IDs
-- [ ] E: Update templates and documentation
+  - [x] D.1: After completing all impl tasks, prompt Claude to work through the test plan tasks
+  - [x] D.2: Teach `tinyspec-task` to accept `T`\-prefixed task IDs
+- [x] E: Update templates and documentation
   
-  - [ ] E.1: Update the default spec template to include example `T.1`, `T.2` test task entries
-  - [ ] E.2: Update `CLAUDE.md` to document the test plan tracking behavior
+  - [x] E.1: Update the default spec template to include example `T.1`, `T.2` test task entries
+  - [x] E.2: Update `CLAUDE.md` to document the test plan tracking behavior
 
 # Test Plan
 
