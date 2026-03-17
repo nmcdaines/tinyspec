@@ -3,6 +3,7 @@ mod commands;
 mod config;
 pub(crate) mod dashboard;
 mod format;
+pub(crate) mod hooks;
 mod init;
 mod lint;
 mod search;
@@ -11,9 +12,11 @@ pub(crate) mod templates;
 
 // Re-export public API (keeps `spec::function_name` working from main.rs)
 pub use archive::{archive_all_completed, archive_spec, unarchive_spec};
-pub use commands::{check_task, delete, edit, list, new_spec, status, view};
+pub use commands::{check_task, check_task_no_hooks, delete, edit, list, new_spec,
+    new_spec_with_hooks, status, view};
 pub use config::{config_list, config_remove, config_set};
 pub use format::{format_all_specs, format_spec};
+pub use hooks::test_hook as hooks_test;
 pub use init::init;
 pub use lint::lint;
 pub use search::search;

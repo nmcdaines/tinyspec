@@ -9,6 +9,8 @@ use chrono::Local;
 
 use super::config::{config_path, load_config};
 use super::format::format_file;
+use super::hooks::{Event, HookContext, run_hooks};
+use super::summary::{SpecStatus, load_spec_summary};
 use super::templates::{collect_templates, find_template, substitute_variables};
 use super::{
     SPECS_DIR, TIMESTAMP_PREFIX_LEN, collect_spec_files, discover_git_root, extract_spec_name,
@@ -16,6 +18,14 @@ use super::{
 };
 
 pub fn new_spec(input: &str, template_name: Option<&str>) -> Result<(), String> {
+    new_spec_impl(input, template_name, false)
+}
+
+pub fn new_spec_with_hooks(input: &str, template_name: Option<&str>) -> Result<(), String> {
+    new_spec_impl(input, template_name, true)
+}
+
+fn new_spec_impl(input: &str, template_name: Option<&str>, fire_hooks: bool) -> Result<(), String> {
     let (group, name) = parse_spec_input(input)?;
 
     // Enforce global uniqueness — check if name already exists anywhere
@@ -141,6 +151,23 @@ applications:
     fs::write(&path, &content).map_err(|e| format!("Failed to write spec file: {e}"))?;
     format_file(&path)?;
     println!("Created spec: {filename}");
+
+    if fire_hooks {
+        let fm = parse_front_matter(&content);
+        let spec_group = match group {
+            Some(g) => g.to_string(),
+            None => String::new(),
+        };
+        run_hooks(&HookContext {
+            event: Event::OnSpecCreate,
+            spec_name: name.to_string(),
+            spec_title: fm.and_then(|f| f.title).unwrap_or_else(|| title.clone()),
+            spec_group,
+            task_id: String::new(),
+            spec_path: path.to_string_lossy().to_string(),
+        });
+    }
+
     Ok(())
 }
 
@@ -355,8 +382,19 @@ pub fn delete(name: &str) -> Result<(), String> {
 }
 
 pub fn check_task(name: &str, task_id: &str, check: bool) -> Result<(), String> {
+    check_task_impl(name, task_id, check, true)
+}
+
+pub fn check_task_no_hooks(name: &str, task_id: &str, check: bool) -> Result<(), String> {
+    check_task_impl(name, task_id, check, false)
+}
+
+fn check_task_impl(name: &str, task_id: &str, check: bool, fire_hooks: bool) -> Result<(), String> {
     let path = find_spec(name)?;
     let content = fs::read_to_string(&path).map_err(|e| format!("Failed to read spec: {e}"))?;
+
+    // Capture status before change (for transition detection)
+    let status_before = load_spec_summary(&path).map(|s| s.status);
 
     let target = format!("{task_id}:");
     let mut found = false;
@@ -399,6 +437,64 @@ pub fn check_task(name: &str, task_id: &str, check: bool) -> Result<(), String> 
 
     let action = if check { "Checked" } else { "Unchecked" };
     println!("{action} task {task_id}");
+
+    if fire_hooks {
+        let status_after = load_spec_summary(&path).map(|s| s.status);
+        let fm = parse_front_matter(&content);
+        let spec_title = fm.and_then(|f| f.title).unwrap_or_else(|| name.to_string());
+        let spec_group = path
+            .parent()
+            .and_then(|p| {
+                let specs_root = specs_dir();
+                if p != specs_root {
+                    p.file_name().and_then(|g| g.to_str()).map(String::from)
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+        let spec_path_str = path.to_string_lossy().to_string();
+
+        let task_event = if check {
+            Event::OnTaskCheck
+        } else {
+            Event::OnTaskUncheck
+        };
+        run_hooks(&HookContext {
+            event: task_event,
+            spec_name: name.to_string(),
+            spec_title: spec_title.clone(),
+            spec_group: spec_group.clone(),
+            task_id: task_id.to_string(),
+            spec_path: spec_path_str.clone(),
+        });
+
+        // Fire spec-level transition hooks
+        if check {
+            if let (Some(before), Some(after)) = (status_before, status_after) {
+                if before == SpecStatus::Pending && after == SpecStatus::InProgress {
+                    run_hooks(&HookContext {
+                        event: Event::OnSpecStart,
+                        spec_name: name.to_string(),
+                        spec_title: spec_title.clone(),
+                        spec_group: spec_group.clone(),
+                        task_id: task_id.to_string(),
+                        spec_path: spec_path_str.clone(),
+                    });
+                } else if after == SpecStatus::Completed {
+                    run_hooks(&HookContext {
+                        event: Event::OnSpecComplete,
+                        spec_name: name.to_string(),
+                        spec_title,
+                        spec_group,
+                        task_id: task_id.to_string(),
+                        spec_path: spec_path_str,
+                    });
+                }
+            }
+        }
+    }
+
     Ok(())
 }
 

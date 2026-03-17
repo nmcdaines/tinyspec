@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -7,6 +8,9 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
     #[serde(default)]
     pub repositories: std::collections::BTreeMap<String, String>,
+    /// Map of event name → list of shell commands to run.
+    #[serde(default)]
+    pub hooks: HashMap<String, Vec<String>>,
 }
 
 pub(crate) fn config_path() -> Result<PathBuf, String> {
@@ -63,6 +67,42 @@ pub fn config_list() -> Result<(), String> {
         println!("{name}: {path}");
     }
     Ok(())
+}
+
+/// Load hooks from the project-level `.tinyspec.yaml` if it exists.
+pub(crate) fn load_project_hooks() -> Result<HashMap<String, Vec<String>>, String> {
+    // Walk up to find the project root (same heuristic as specs_dir)
+    let mut dir = std::env::current_dir().map_err(|e| format!("Cannot get cwd: {e}"))?;
+    loop {
+        let candidate = dir.join(".tinyspec.yaml");
+        if candidate.exists() {
+            let content = fs::read_to_string(&candidate)
+                .map_err(|e| format!("Failed to read .tinyspec.yaml: {e}"))?;
+            if content.trim().is_empty() {
+                return Ok(HashMap::new());
+            }
+            let cfg: Config = serde_yaml::from_str(&content)
+                .map_err(|e| format!("Failed to parse .tinyspec.yaml: {e}"))?;
+            return Ok(cfg.hooks);
+        }
+        if dir.join(".specs").is_dir() || !dir.pop() {
+            break;
+        }
+    }
+    Ok(HashMap::new())
+}
+
+/// Load merged hooks: project-level hooks first, then user-level hooks appended.
+pub(crate) fn load_merged_hooks() -> Result<HashMap<String, Vec<String>>, String> {
+    let user_hooks = load_config()?.hooks;
+    let project_hooks = load_project_hooks()?;
+
+    // Merge: for each event, project hooks run first, then user hooks
+    let mut merged: HashMap<String, Vec<String>> = project_hooks;
+    for (event, cmds) in user_hooks {
+        merged.entry(event).or_default().extend(cmds);
+    }
+    Ok(merged)
 }
 
 pub fn config_remove(name: &str) -> Result<(), String> {

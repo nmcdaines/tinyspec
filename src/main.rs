@@ -32,6 +32,9 @@ enum Commands {
         /// Use a named template (from .specs/templates/ or ~/.config/tinyspec/templates/)
         #[arg(short, long)]
         template: Option<String>,
+        /// Skip hook execution for this invocation
+        #[arg(long)]
+        no_hooks: bool,
     },
 
     /// List all specs
@@ -75,6 +78,9 @@ enum Commands {
         spec_name: String,
         /// Task ID (e.g. A, A.1, B, or emoji like 🧪, 🧪.1)
         task_id: String,
+        /// Skip hook execution for this invocation
+        #[arg(long)]
+        no_hooks: bool,
     },
 
     /// Mark a task as incomplete
@@ -84,6 +90,9 @@ enum Commands {
         spec_name: String,
         /// Task ID (e.g. A, A.1, B, or emoji like 🧪, 🧪.1)
         task_id: String,
+        /// Skip hook execution for this invocation
+        #[arg(long)]
+        no_hooks: bool,
     },
 
     /// Format a spec's Markdown (or all specs with --all)
@@ -165,6 +174,21 @@ enum Commands {
         #[arg(long)]
         all: bool,
     },
+
+    /// Manage and test lifecycle hooks
+    Hooks {
+        #[command(subcommand)]
+        action: HooksAction,
+    },
+}
+
+#[derive(Subcommand)]
+enum HooksAction {
+    /// Fire a named event with dummy context to test your hook configuration
+    Test {
+        /// Event name (e.g. on_spec_complete)
+        event: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -195,7 +219,14 @@ fn main() {
         Commands::New {
             spec_name,
             template,
-        } => spec::new_spec(&spec_name, template.as_deref()),
+            no_hooks,
+        } => {
+            if no_hooks {
+                spec::new_spec(&spec_name, template.as_deref())
+            } else {
+                spec::new_spec_with_hooks(&spec_name, template.as_deref())
+            }
+        }
         Commands::List {
             json,
             include_archived,
@@ -203,8 +234,28 @@ fn main() {
         Commands::View { spec_name, json } => spec::view(&spec_name, json),
         Commands::Edit { spec_name } => spec::edit(&spec_name),
         Commands::Delete { spec_name } => spec::delete(&spec_name),
-        Commands::Check { spec_name, task_id } => spec::check_task(&spec_name, &task_id, true),
-        Commands::Uncheck { spec_name, task_id } => spec::check_task(&spec_name, &task_id, false),
+        Commands::Check {
+            spec_name,
+            task_id,
+            no_hooks,
+        } => {
+            if no_hooks {
+                spec::check_task_no_hooks(&spec_name, &task_id, true)
+            } else {
+                spec::check_task(&spec_name, &task_id, true)
+            }
+        }
+        Commands::Uncheck {
+            spec_name,
+            task_id,
+            no_hooks,
+        } => {
+            if no_hooks {
+                spec::check_task_no_hooks(&spec_name, &task_id, false)
+            } else {
+                spec::check_task(&spec_name, &task_id, false)
+            }
+        }
         Commands::Format { spec_name, all } => {
             if all {
                 spec::format_all_specs()
@@ -242,6 +293,9 @@ fn main() {
         }
         Commands::Unarchive { spec_name } => spec::unarchive_spec(&spec_name),
         Commands::Lint { spec_name, all } => spec::lint(spec_name.as_deref(), all),
+        Commands::Hooks { action } => match action {
+            HooksAction::Test { event } => spec::hooks_test(&event),
+        },
     };
 
     if let Err(e) = result {
