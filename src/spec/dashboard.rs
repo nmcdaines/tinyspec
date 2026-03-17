@@ -43,8 +43,9 @@ enum Mode {
 
 struct DetailState {
     spec_index: usize,
-    collapsed: HashSet<usize>, // indices of collapsed top-level tasks
-    selected: usize,           // index into visible detail rows
+    collapsed: HashSet<usize>,       // indices of collapsed impl top-level tasks
+    collapsed_tests: HashSet<usize>, // indices of collapsed test top-level tasks
+    selected: usize,                 // index into visible detail rows
 }
 
 struct App {
@@ -70,6 +71,7 @@ impl App {
             detail: DetailState {
                 spec_index: 0,
                 collapsed: HashSet::new(),
+                collapsed_tests: HashSet::new(),
                 selected: 0,
             },
             should_quit: false,
@@ -180,44 +182,84 @@ impl App {
     }
 
     /// Build flat list of visible detail rows for the detail view.
-    /// Unchecked tasks first, then a separator, then checked tasks.
     fn detail_rows(&self) -> Vec<DetailRow> {
         let spec = &self.specs[self.detail.spec_index];
         let mut rows = Vec::new();
 
-        let emit_task = |rows: &mut Vec<DetailRow>,
-                         i: usize,
-                         task: &super::summary::TaskNode,
-                         collapsed: &HashSet<usize>| {
-            let expanded = !collapsed.contains(&i);
-            rows.push(DetailRow::TopLevel { index: i, expanded });
-            if expanded {
-                for j in 0..task.children.len() {
-                    rows.push(DetailRow::SubTask {
-                        parent: i,
-                        child: j,
-                    });
+        // --- Implementation Plan section ---
+        if !spec.tasks.is_empty() {
+            rows.push(DetailRow::SectionLabel("Implementation Plan".into()));
+
+            // Unchecked impl tasks first
+            for (i, task) in spec.tasks.iter().enumerate() {
+                if !task.checked {
+                    let expanded = !self.detail.collapsed.contains(&i);
+                    rows.push(DetailRow::TopLevel { index: i, expanded });
+                    if expanded {
+                        for j in 0..task.children.len() {
+                            rows.push(DetailRow::SubTask { parent: i, child: j });
+                        }
+                    }
                 }
             }
-        };
 
-        // Unchecked tasks first
-        for (i, task) in spec.tasks.iter().enumerate() {
-            if !task.checked {
-                emit_task(&mut rows, i, task, &self.detail.collapsed);
+            let has_unchecked = spec.tasks.iter().any(|t| !t.checked);
+            let has_checked = spec.tasks.iter().any(|t| t.checked);
+            if has_unchecked && has_checked {
+                rows.push(DetailRow::Separator);
+            }
+
+            // Checked impl tasks
+            for (i, task) in spec.tasks.iter().enumerate() {
+                if task.checked {
+                    let expanded = !self.detail.collapsed.contains(&i);
+                    rows.push(DetailRow::TopLevel { index: i, expanded });
+                    if expanded {
+                        for j in 0..task.children.len() {
+                            rows.push(DetailRow::SubTask { parent: i, child: j });
+                        }
+                    }
+                }
             }
         }
 
-        let has_unchecked = spec.tasks.iter().any(|t| !t.checked);
-        let has_checked = spec.tasks.iter().any(|t| t.checked);
-        if has_unchecked && has_checked {
-            rows.push(DetailRow::Separator);
-        }
+        // --- Test Plan section ---
+        if !spec.test_tasks.is_empty() {
+            if !spec.tasks.is_empty() {
+                rows.push(DetailRow::Separator);
+            }
+            rows.push(DetailRow::SectionLabel("Test Plan".into()));
 
-        // Checked tasks
-        for (i, task) in spec.tasks.iter().enumerate() {
-            if task.checked {
-                emit_task(&mut rows, i, task, &self.detail.collapsed);
+            // Unchecked test tasks first
+            for (i, task) in spec.test_tasks.iter().enumerate() {
+                if !task.checked {
+                    let expanded = !self.detail.collapsed_tests.contains(&i);
+                    rows.push(DetailRow::TestTopLevel { index: i, expanded });
+                    if expanded {
+                        for j in 0..task.children.len() {
+                            rows.push(DetailRow::TestSubTask { parent: i, child: j });
+                        }
+                    }
+                }
+            }
+
+            let has_unchecked_tests = spec.test_tasks.iter().any(|t| !t.checked);
+            let has_checked_tests = spec.test_tasks.iter().any(|t| t.checked);
+            if has_unchecked_tests && has_checked_tests {
+                rows.push(DetailRow::Separator);
+            }
+
+            // Checked test tasks
+            for (i, task) in spec.test_tasks.iter().enumerate() {
+                if task.checked {
+                    let expanded = !self.detail.collapsed_tests.contains(&i);
+                    rows.push(DetailRow::TestTopLevel { index: i, expanded });
+                    if expanded {
+                        for j in 0..task.children.len() {
+                            rows.push(DetailRow::TestSubTask { parent: i, child: j });
+                        }
+                    }
+                }
             }
         }
 
@@ -227,8 +269,11 @@ impl App {
 
 #[derive(Clone)]
 enum DetailRow {
+    SectionLabel(String),
     TopLevel { index: usize, expanded: bool },
     SubTask { parent: usize, child: usize },
+    TestTopLevel { index: usize, expanded: bool },
+    TestSubTask { parent: usize, child: usize },
     Separator,
 }
 
@@ -338,6 +383,7 @@ fn handle_list_key(app: &mut App, code: KeyCode) {
                 app.detail = DetailState {
                     spec_index: idx,
                     collapsed: HashSet::new(),
+                    collapsed_tests: HashSet::new(),
                     selected: 0,
                 };
                 app.mode = Mode::Detail;
@@ -364,13 +410,24 @@ fn handle_detail_key(app: &mut App, code: KeyCode) {
         }
         KeyCode::Enter | KeyCode::Char(' ') => {
             let rows = app.detail_rows();
-            if let Some(DetailRow::TopLevel { index, .. }) = rows.get(app.detail.selected) {
-                let idx = *index;
-                if app.detail.collapsed.contains(&idx) {
-                    app.detail.collapsed.remove(&idx);
-                } else {
-                    app.detail.collapsed.insert(idx);
+            match rows.get(app.detail.selected) {
+                Some(DetailRow::TopLevel { index, .. }) => {
+                    let idx = *index;
+                    if app.detail.collapsed.contains(&idx) {
+                        app.detail.collapsed.remove(&idx);
+                    } else {
+                        app.detail.collapsed.insert(idx);
+                    }
                 }
+                Some(DetailRow::TestTopLevel { index, .. }) => {
+                    let idx = *index;
+                    if app.detail.collapsed_tests.contains(&idx) {
+                        app.detail.collapsed_tests.remove(&idx);
+                    } else {
+                        app.detail.collapsed_tests.insert(idx);
+                    }
+                }
+                _ => {}
             }
         }
         _ => {}
@@ -405,6 +462,12 @@ fn ui(frame: &mut Frame, app: &mut App) {
         ]),
         Mode::Detail => {
             let spec = &app.specs[app.detail.spec_index];
+            let has_tests = !spec.test_tasks.is_empty();
+            let sections = if has_tests {
+                " — Implementation Plan & Test Plan"
+            } else {
+                " — Implementation Plan"
+            };
             Line::from(vec![
                 Span::styled(
                     format!(" {}", spec.name),
@@ -412,7 +475,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
                         .fg(Color::Cyan)
                         .add_modifier(Modifier::BOLD),
                 ),
-                Span::raw(" — Implementation Plan"),
+                Span::raw(sections),
             ])
         }
     };
@@ -488,10 +551,21 @@ fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
             }
             DisplayItem::Spec(idx) => {
                 let spec = &app.specs[*idx];
-                let (icon, icon_color) = match spec.status {
-                    SpecStatus::InProgress => ("●", Color::Yellow),
-                    SpecStatus::Pending => ("○", Color::DarkGray),
-                    SpecStatus::Completed => ("✓", Color::Green),
+
+                // Distinguish "impl done, tests pending" from fully complete
+                let impl_done = spec.total == 0 || spec.checked == spec.total;
+                let tests_done = spec.total_tests == 0 || spec.checked_tests == spec.total_tests;
+                let (icon, icon_color) = if impl_done && tests_done {
+                    ("✓", Color::Green)
+                } else if impl_done && !tests_done {
+                    // Impl complete but tests pending — use cyan to distinguish
+                    ("◑", Color::Cyan)
+                } else {
+                    match spec.status {
+                        SpecStatus::InProgress => ("●", Color::Yellow),
+                        SpecStatus::Pending => ("○", Color::DarkGray),
+                        SpecStatus::Completed => ("✓", Color::Green),
+                    }
                 };
 
                 let filled = if spec.total > 0 {
@@ -501,10 +575,22 @@ fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
                 };
                 let empty = bar_width - filled;
 
-                let bar_color = match spec.status {
-                    SpecStatus::Completed => Color::Green,
-                    SpecStatus::InProgress => Color::Yellow,
-                    SpecStatus::Pending => Color::DarkGray,
+                let bar_color = if impl_done && tests_done {
+                    Color::Green
+                } else if spec.checked > 0 || spec.checked_tests > 0 {
+                    Color::Yellow
+                } else {
+                    Color::DarkGray
+                };
+
+                // Counter: show impl and test separately when test tasks exist
+                let counter = if spec.total_tests > 0 {
+                    format!(
+                        "  {}/{} impl  {}/{} tests",
+                        spec.checked, spec.total, spec.checked_tests, spec.total_tests
+                    )
+                } else {
+                    format!("  {}/{}", spec.checked, spec.total)
                 };
 
                 ListItem::new(Line::from(vec![
@@ -518,7 +604,7 @@ fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
                     Span::raw(format!("{:<24}", spec.name)),
                     Span::styled("█".repeat(filled), Style::default().fg(bar_color)),
                     Span::styled("░".repeat(empty), Style::default().fg(Color::DarkGray)),
-                    Span::raw(format!("  {}/{}", spec.checked, spec.total)),
+                    Span::raw(counter),
                 ]))
             }
         })
@@ -537,6 +623,43 @@ fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_stateful_widget(list, area, &mut list_state);
 }
 
+fn render_task_top_level<'a>(
+    task: &'a super::summary::TaskNode,
+    expanded: bool,
+) -> ListItem<'a> {
+    let arrow = if task.children.is_empty() {
+        " "
+    } else if expanded {
+        "▼"
+    } else {
+        "▶"
+    };
+    let check = if task.checked { "✓" } else { "☐" };
+    let check_color = if task.checked { Color::Green } else { Color::default() };
+    let child_progress = if !task.children.is_empty() {
+        let done = task.children.iter().filter(|c| c.checked).count();
+        format!("  [{}/{}]", done, task.children.len())
+    } else {
+        String::new()
+    };
+    ListItem::new(Line::from(vec![
+        Span::raw(format!("  {arrow} ")),
+        Span::styled(check, Style::default().fg(check_color)),
+        Span::raw(format!(" {}: {}", task.id, task.description)),
+        Span::styled(child_progress, Style::default().fg(Color::DarkGray)),
+    ]))
+}
+
+fn render_task_subtask<'a>(task: &'a super::summary::TaskNode) -> ListItem<'a> {
+    let check = if task.checked { "✓" } else { "☐" };
+    let check_color = if task.checked { Color::Green } else { Color::default() };
+    ListItem::new(Line::from(vec![
+        Span::raw("      "),
+        Span::styled(check, Style::default().fg(check_color)),
+        Span::raw(format!(" {}: {}", task.id, task.description)),
+    ]))
+}
+
 fn render_detail(frame: &mut Frame, app: &mut App, area: Rect) {
     let spec = &app.specs[app.detail.spec_index];
     let rows = app.detail_rows();
@@ -545,50 +668,26 @@ fn render_detail(frame: &mut Frame, app: &mut App, area: Rect) {
         .iter()
         .map(|row| match row {
             DetailRow::Separator => ListItem::new(Line::raw("")),
+            DetailRow::SectionLabel(label) => ListItem::new(Line::from(vec![
+                Span::raw("  "),
+                Span::styled(
+                    format!("── {label} "),
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+            ])),
             DetailRow::TopLevel { index, expanded } => {
-                let task = &spec.tasks[*index];
-                let arrow = if task.children.is_empty() {
-                    " "
-                } else if *expanded {
-                    "▼"
-                } else {
-                    "▶"
-                };
-                let check = if task.checked { "✓" } else { "☐" };
-                let check_color = if task.checked {
-                    Color::Green
-                } else {
-                    Color::default()
-                };
-
-                let child_progress = if !task.children.is_empty() {
-                    let done = task.children.iter().filter(|c| c.checked).count();
-                    format!("  [{}/{}]", done, task.children.len())
-                } else {
-                    String::new()
-                };
-
-                ListItem::new(Line::from(vec![
-                    Span::raw(format!("  {arrow} ")),
-                    Span::styled(check, Style::default().fg(check_color)),
-                    Span::raw(format!(" {}: {}", task.id, task.description)),
-                    Span::styled(child_progress, Style::default().fg(Color::DarkGray)),
-                ]))
+                render_task_top_level(&spec.tasks[*index], *expanded)
             }
             DetailRow::SubTask { parent, child } => {
-                let task = &spec.tasks[*parent].children[*child];
-                let check = if task.checked { "✓" } else { "☐" };
-                let check_color = if task.checked {
-                    Color::Green
-                } else {
-                    Color::default()
-                };
-
-                ListItem::new(Line::from(vec![
-                    Span::raw("      "),
-                    Span::styled(check, Style::default().fg(check_color)),
-                    Span::raw(format!(" {}: {}", task.id, task.description)),
-                ]))
+                render_task_subtask(&spec.tasks[*parent].children[*child])
+            }
+            DetailRow::TestTopLevel { index, expanded } => {
+                render_task_top_level(&spec.test_tasks[*index], *expanded)
+            }
+            DetailRow::TestSubTask { parent, child } => {
+                render_task_subtask(&spec.test_tasks[*parent].children[*child])
             }
         })
         .collect();

@@ -35,11 +35,11 @@ A `--skip-tests` flag on `tinyspec status` and in skills can be provided for spe
   - [x] B.1: Add `total_tests` and `checked_tests` fields to `SpecSummary`
   - [x] B.2: Change `Completed` status to require all test tasks checked (in addition to impl tasks)
   - [x] B.3: Add `--skip-tests` flag to `tinyspec status` for specs without tracked test tasks
-- [ ] C: Surface test task progress in the dashboard
+- [x] C: Surface test task progress in the dashboard
   
-  - [ ] C.1: Show separate impl and test progress bars (or combined with a distinct label) in the spec list view
-  - [ ] C.2: Show `# Test Plan` tasks under a distinct heading in the detail view, collapsible independently from the impl plan
-  - [ ] C.3: Distinguish between "impl done, tests pending" and "fully complete" visually
+  - [x] C.1: Show separate impl and test progress bars (or combined with a distinct label) in the spec list view
+  - [x] C.2: Show `# Test Plan` tasks under a distinct heading in the detail view, collapsible independently from the impl plan
+  - [x] C.3: Distinguish between "impl done, tests pending" and "fully complete" visually
 - [ ] D: Update the `tinyspec-do` and `tinyspec-task` skills
   
   - [ ] D.1: After completing all impl tasks, prompt Claude to work through the test plan tasks
