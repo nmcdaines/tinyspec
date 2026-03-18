@@ -17,9 +17,8 @@ This skill operates in two modes based on whether arguments are provided:
 1. Run `tinyspec status` to list all specs and their completion progress.
 2. Identify incomplete specs — any spec where not all tasks are complete.
 3. If there are no incomplete specs, inform the user that all specs are complete and stop.
-4. For each incomplete spec (sorted by dependency order then priority — high before medium before low):
-   a. Skip specs that are BLOCKED (dependencies not yet complete) and re-queue them for later.
-   b. Announce which spec you are starting (e.g., "Working on spec: feature-name (3/10 tasks complete)").
+4. For each incomplete spec (in chronological order, earliest first):
+   a. Announce which spec you are starting (e.g., "Working on spec: feature-name (3/10 tasks complete)").
    b. Read the full spec using `tinyspec view <spec-name>` to understand the context.
       - If `tinyspec view` fails with a config error, inform the user that they need to configure repository paths with `tinyspec config set <repo-name> <path>` and stop.
    c. Find the next unchecked task in the Implementation Plan.
@@ -28,8 +27,7 @@ This skill operates in two modes based on whether arguments are provided:
    f. After completing a top-level task group and all its subtasks, mark the group done too.
    g. Commit progress with a descriptive commit message referencing the spec and task group.
    h. Move on to the next task group and repeat until the spec is fully complete.
-5. After completing a spec, re-evaluate which previously blocked specs are now unblocked and process them.
-6. After all specs are complete, summarize what was accomplished.
+5. After all specs are complete, summarize what was accomplished.
 
 ### Autonomous decision-making
 

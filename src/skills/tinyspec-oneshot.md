@@ -33,17 +33,20 @@ Examples:
 
 ### Sequential execution (no `--parallel`)
 
-For each incomplete spec (in chronological order, earliest first):
+For each incomplete spec (sorted by dependency order then priority — high before medium before low):
 
-1. Announce which spec you are starting (e.g., "Working on spec: feature-name (3/10 tasks complete)").
-2. Read the full spec using `tinyspec view <spec-name>` to understand the context.
+1. Skip specs that are BLOCKED (dependencies not yet complete) and re-queue them for later.
+2. Announce which spec you are starting (e.g., "Working on spec: feature-name (3/10 tasks complete)").
+3. Read the full spec using `tinyspec view <spec-name>` to understand the context.
    - If `tinyspec view` fails with a config error, inform the user that they need to configure repository paths with `tinyspec config set <repo-name> <path>` and stop.
-3. Find the next unchecked task in the Implementation Plan.
-4. Implement all subtasks within the current task group.
-5. After completing each subtask, mark it done with `tinyspec check <spec-name> <task-id>`.
-6. After completing a top-level task group and all its subtasks, mark the group done too.
-7. Commit progress with a descriptive commit message referencing the spec and task group.
-8. Move on to the next task group and repeat until the spec is fully complete.
+4. Find the next unchecked task in the Implementation Plan.
+5. Implement all subtasks within the current task group.
+6. After completing each subtask, mark it done with `tinyspec check <spec-name> <task-id>`.
+7. After completing a top-level task group and all its subtasks, mark the group done too.
+8. Commit progress with a descriptive commit message referencing the spec and task group.
+9. Move on to the next task group and repeat until the spec is fully complete.
+
+After completing a spec, re-evaluate which previously blocked specs are now unblocked and process them.
 
 After all specs are complete, summarize what was accomplished.
 

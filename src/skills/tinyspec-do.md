@@ -7,21 +7,37 @@ IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io
 
 ## Argument parsing
 
-`$ARGUMENTS` may contain a spec name and an optional `--parallel` flag in any order. Parse them as follows:
+`$ARGUMENTS` may contain a spec name and optional flags in any order. Parse them as follows:
 
 - **Spec name**: the argument that does not start with `--`
 - **Parallel mode**: enabled if `--parallel` is present anywhere in `$ARGUMENTS`
+- **Dry-run mode**: enabled if `--dry-run` is present anywhere in `$ARGUMENTS`
+
+If no spec name is given in `$ARGUMENTS` (only flags or empty), check for a focused spec with `tinyspec focus` (no arguments). If a spec is focused, use it. If not, prompt the user to specify a spec or run `tinyspec focus <spec-name>`.
 
 Examples:
 - `my-spec --parallel` → spec: `my-spec`, parallel: enabled
 - `--parallel my-spec` → spec: `my-spec`, parallel: enabled
 - `my-spec` → spec: `my-spec`, parallel: disabled
+- `my-spec --dry-run` → spec: `my-spec`, dry-run: enabled
+- `` (empty) → check `.tinyspec-focus` for default spec
 
 If no matching spec is found, list available specs with `tinyspec list` and ask the user which one they meant.
 
+## Dry-run mode (`--dry-run`)
+
+If `--dry-run` is specified, print a summary of what would happen without modifying any files:
+
+1. Load the spec with `tinyspec view <spec-name>`.
+2. List all incomplete tasks in order with their group breakdown.
+3. Identify which applications/repos will be touched (from front matter).
+4. Flag any blocked tasks (dependencies not met) or missing application configs.
+5. Show the estimated task count and group breakdown.
+6. Exit without modifying any files.
+
 ## Setup
 
-1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal). This command resolves application references to folder paths automatically.
+1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal, and Decisions if present). Pay special attention to the `# Decisions` section — it contains design constraints and rationale from the refinement session that should guide your implementation choices. This command resolves application references to folder paths automatically.
    - **Mermaid diagrams are authoritative design documentation.** If the spec contains Mermaid fenced code blocks (flowchart, sequenceDiagram, stateDiagram-v2, erDiagram, graph), read them carefully — they describe the intended architecture, data flow, or component relationships. Implement according to the diagram, not in spite of it. Never skip or strip Mermaid blocks when reading a spec for context.
    - If `tinyspec view` fails with a config error, inform the user that they need to configure repository paths with `tinyspec config set <repo-name> <path>` and stop.
 2. If the spec references applications (listed in the `applications` frontmatter field), explore each referenced repository before beginning work:
@@ -29,6 +45,7 @@ If no matching spec is found, list available specs with `tinyspec list` and ask 
    - Consider how the implementation will interact across all referenced repositories.
    - If no `applications` field is present (or it's empty), explore only the current repository from the working directory onwards.
 3. Run `tinyspec status <spec-name>` to see current progress.
+   - If the status shows `BLOCKED`, the spec has unmet dependencies. Warn the user and use `AskUserQuestion` to confirm they want to proceed anyway.
 
 ## Dependency analysis (parallel mode only)
 

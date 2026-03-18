@@ -8,13 +8,15 @@ IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io
 The arguments contain a spec name and a task ID separated by a space: `$ARGUMENTS`
 Parse the first word as the spec name and the second word as the task ID.
 
+If only a task ID is given (one argument, no spec name), check for a focused spec with `tinyspec focus` (no arguments). If a spec is focused, use it. If not, prompt the user to specify a spec or run `tinyspec focus <spec-name>`.
+
 Read the tinyspec specification at `.specs/<spec-name>.md` (resolve by matching the suffix after the timestamp prefix).
 
 If no matching spec is found, list available specs with `tinyspec list` and ask the user which one they meant.
 
 Your goal is to complete a specific task:
 
-1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal, Implementation Plan). This command resolves application references to folder paths automatically.
+1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal, Implementation Plan, and Decisions if present). Pay special attention to the `# Decisions` section — it contains design constraints and rationale from the refinement session. This command resolves application references to folder paths automatically.
    - If `tinyspec view` fails with a config error, inform the user that they need to configure repository paths with `tinyspec config set <repo-name> <path>` and stop.
 2. If the spec references applications (listed in the `applications` frontmatter field), explore the relevant parts of each referenced repository to understand context:
    - For each resolved application folder path, explore the directory tree and read key source files relevant to the task at hand.
