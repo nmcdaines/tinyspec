@@ -5,13 +5,30 @@ description: Implement a spec's full Implementation Plan, working through tasks 
 
 IMPORTANT: `tinyspec` is a native binary CLI tool (installed via cargo/crates.io), NOT an npm package. Run it directly as `tinyspec <command>`. Never use npm, npx, or node to run it.
 
-Read the tinyspec specification at `.specs/$ARGUMENTS.md` (resolve the name by matching the suffix after the timestamp prefix).
+Parse `$ARGUMENTS` for the spec name and optional flags. If `--dry-run` is present, operate in dry-run mode (see below).
+
+If no spec name is given in `$ARGUMENTS` (only flags or empty), check for a focused spec with `tinyspec focus` (no arguments). If a spec is focused, use it. If not, prompt the user to specify a spec or run `tinyspec focus <spec-name>`.
+
+Read the tinyspec specification at `.specs/<spec-name>.md` (resolve the name by matching the suffix after the timestamp prefix).
 
 If no matching spec is found, list available specs with `tinyspec list` and ask the user which one they meant.
 
+## Dry-run mode (`--dry-run`)
+
+If `--dry-run` is specified, print a summary of what would happen without modifying any files:
+
+1. Load the spec with `tinyspec view <spec-name>`.
+2. List all incomplete tasks in order with their group breakdown.
+3. Identify which applications/repos will be touched (from front matter).
+4. Flag any blocked tasks (dependencies not met) or missing application configs.
+5. Show the estimated task count and group breakdown.
+6. Exit without modifying any files.
+
+## Normal mode
+
 Your goal is to work through the spec's Implementation Plan:
 
-1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal, and Decisions if present). This command resolves application references to folder paths automatically.
+1. Read the full spec using `tinyspec view <spec-name>` to understand the context (Background, Proposal, and Decisions if present). Pay special attention to the `# Decisions` section — it contains design constraints and rationale from the refinement session that should guide your implementation choices. This command resolves application references to folder paths automatically.
    - If `tinyspec view` fails with a config error, inform the user that they need to configure repository paths with `tinyspec config set <repo-name> <path>` and stop.
    - If the spec references multiple applications, use the `AskUserQuestion` tool to ask the user which repositories to focus on before proceeding.
 2. Run `tinyspec status <spec-name>` to see current progress.

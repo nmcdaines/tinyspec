@@ -13,8 +13,8 @@ pub(crate) mod templates;
 // Re-export public API (keeps `spec::function_name` working from main.rs)
 pub use archive::{archive_all_completed, archive_spec, unarchive_spec};
 pub use commands::{
-    check_task, check_task_no_hooks, delete, diagram, edit, list, new_spec, new_spec_with_hooks,
-    status, view,
+    check_task, check_task_no_hooks, delete, diagram, edit, focus, list, new_spec,
+    new_spec_with_hooks, status, unfocus, view,
 };
 pub use config::{config_list, config_remove, config_set};
 pub use format::{format_all_specs, format_spec};
@@ -176,7 +176,6 @@ pub(crate) enum Priority {
     Medium,
     Low,
 }
-
 
 impl Priority {
     pub(crate) fn label(&self) -> &'static str {

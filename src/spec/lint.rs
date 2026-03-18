@@ -74,12 +74,13 @@ pub fn lint_file(path: &Path) -> Vec<LintIssue> {
         if trimmed.starts_with("# ") && !trimmed.starts_with("## ") {
             // Finish previous section check
             if let Some((heading_line, heading)) = current_heading_line
-                && !section_has_content {
-                    issues.push(LintIssue::error_at(
-                        format!("Section '{heading}' is empty"),
-                        heading_line + 1,
-                    ));
-                }
+                && !section_has_content
+            {
+                issues.push(LintIssue::error_at(
+                    format!("Section '{heading}' is empty"),
+                    heading_line + 1,
+                ));
+            }
             current_heading_line = Some((i, trimmed));
             section_has_content = false;
         } else if current_heading_line.is_some() && !trimmed.is_empty() {
@@ -88,12 +89,13 @@ pub fn lint_file(path: &Path) -> Vec<LintIssue> {
     }
     // Check last section
     if let Some((heading_line, heading)) = current_heading_line
-        && !section_has_content {
-            issues.push(LintIssue::error_at(
-                format!("Section '{heading}' is empty"),
-                heading_line + 1,
-            ));
-        }
+        && !section_has_content
+    {
+        issues.push(LintIssue::error_at(
+            format!("Section '{heading}' is empty"),
+            heading_line + 1,
+        ));
+    }
 
     // Check task IDs are sequential
     let tasks = parse_tasks_from_content(&content);
@@ -136,15 +138,16 @@ pub fn lint_file(path: &Path) -> Vec<LintIssue> {
         .unwrap_or_default();
 
     if !apps.is_empty()
-        && let Ok(config) = load_config() {
-            for app in &apps {
-                if !config.repositories.contains_key(app.as_str()) {
-                    issues.push(LintIssue::warning(format!(
-                        "Application '{app}' is not configured (run: tinyspec config set {app} <path>)"
-                    )));
-                }
+        && let Ok(config) = load_config()
+    {
+        for app in &apps {
+            if !config.repositories.contains_key(app.as_str()) {
+                issues.push(LintIssue::warning(format!(
+                    "Application '{app}' is not configured (run: tinyspec config set {app} <path>)"
+                )));
             }
         }
+    }
 
     issues
 }
@@ -222,15 +225,16 @@ pub fn lint(spec_name: Option<&str>, all: bool) -> Result<(), String> {
 
     // Check for circular dependencies across all specs
     if let Ok(summaries) = load_all_summaries()
-        && let Err(cycle) = detect_dependency_cycles(&summaries) {
-            any_issues = true;
-            has_errors = true;
-            println!("(dependency cycle):");
-            println!(
-                "  [error] Circular dependency detected among specs: {}",
-                cycle.join(", ")
-            );
-        }
+        && let Err(cycle) = detect_dependency_cycles(&summaries)
+    {
+        any_issues = true;
+        has_errors = true;
+        println!("(dependency cycle):");
+        println!(
+            "  [error] Circular dependency detected among specs: {}",
+            cycle.join(", ")
+        );
+    }
 
     if !any_issues {
         println!("All specs are clean.");

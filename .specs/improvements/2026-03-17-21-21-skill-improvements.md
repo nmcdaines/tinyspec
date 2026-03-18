@@ -48,39 +48,39 @@ The focused spec name is also displayed in `tinyspec list` output (e.g., with a 
 
 # Implementation Plan
 
-- [ ] A: Implement the `# Decisions` section in `tinyspec-refine`
+- [x] A: Implement the `# Decisions` section in `tinyspec-refine`
   
-  - [ ] A.1: Update the `tinyspec-refine` skill to collect Q&A decisions during the session
-  - [ ] A.2: After the user approves the implementation plan, append a `# Decisions` section to the spec with structured entries
-  - [ ] A.3: Update `tinyspec-do` and `tinyspec-task` skills to read `# Decisions` before starting implementation
-- [ ] B: Implement dry-run mode in `tinyspec-do`
+  - [x] A.1: Update the `tinyspec-refine` skill to collect Q&A decisions during the session
+  - [x] A.2: After the user approves the implementation plan, append a `# Decisions` section to the spec with structured entries
+  - [x] A.3: Update `tinyspec-do` and `tinyspec-task` skills to read `# Decisions` before starting implementation
+- [x] B: Implement dry-run mode in `tinyspec-do`
   
-  - [ ] B.1: Add `--dry-run` argument parsing to the `tinyspec-do` skill
-  - [ ] B.2: In dry-run mode: load the spec, list all incomplete tasks with group breakdowns, identify repos to be touched, flag any blocked or misconfigured tasks
-  - [ ] B.3: Print the dry-run report and exit without modifying any files
-- [ ] C: Implement `tinyspec focus` and `tinyspec unfocus`
+  - [x] B.1: Add `--dry-run` argument parsing to the `tinyspec-do` skill
+  - [x] B.2: In dry-run mode: load the spec, list all incomplete tasks with group breakdowns, identify repos to be touched, flag any blocked or misconfigured tasks
+  - [x] B.3: Print the dry-run report and exit without modifying any files
+- [x] C: Implement `tinyspec focus` and `tinyspec unfocus`
   
-  - [ ] C.1: Add `focus` and `unfocus` subcommands to the CLI
-  - [ ] C.2: `focus <spec-name>`: resolve the spec name (validate it exists), write to `.tinyspec-focus`
-  - [ ] C.3: `focus` with no argument: print the currently focused spec name (or "no spec focused")
-  - [ ] C.4: `unfocus`: delete `.tinyspec-focus` if present
-  - [ ] C.5: Add `.tinyspec-focus` to `.gitignore` (it's a local session artifact)
-- [ ] D: Update skills to read `.tinyspec-focus` as default spec
+  - [x] C.1: Add `focus` and `unfocus` subcommands to the CLI
+  - [x] C.2: `focus <spec-name>`: resolve the spec name (validate it exists), write to `.tinyspec-focus`
+  - [x] C.3: `focus` with no argument: print the currently focused spec name (or "no spec focused")
+  - [x] C.4: `unfocus`: delete `.tinyspec-focus` if present
+  - [x] C.5: Add `.tinyspec-focus` to `.gitignore` (it's a local session artifact)
+- [x] D: Update skills to read `.tinyspec-focus` as default spec
   
-  - [ ] D.1: In `tinyspec-do`, `tinyspec-task`, `tinyspec-refine`: if no spec name argument is given, check for `.tinyspec-focus` and use it
-  - [ ] D.2: If `.tinyspec-focus` is missing and no argument given, prompt the user to specify a spec or run `tinyspec focus`
-- [ ] E: Surface focus state in list and dashboard
+  - [x] D.1: In `tinyspec-do`, `tinyspec-task`, `tinyspec-refine`: if no spec name argument is given, check for `.tinyspec-focus` and use it
+  - [x] D.2: If `.tinyspec-focus` is missing and no argument given, prompt the user to specify a spec or run `tinyspec focus`
+- [x] E: Surface focus state in list and dashboard
   
-  - [ ] E.1: Mark the focused spec with a `→` indicator in `tinyspec list` output
-  - [ ] E.2: Show focused spec name in the dashboard header line
+  - [x] E.1: Mark the focused spec with a `→` indicator in `tinyspec list` output
+  - [x] E.2: Show focused spec name in the dashboard header line
 
 # Test Plan
 
-- [ ] T.1: After running `/tinyspec:refine`, verify a `# Decisions` section is appended with at least one entry
-- [ ] T.2: `tinyspec-do` reads the `# Decisions` section without erroring on specs that don't have one
-- [ ] T.3: `/tinyspec:do --dry-run` prints a task list and repo summary without modifying any files
-- [ ] T.4: `tinyspec focus my-spec` writes `my-spec` to `.tinyspec-focus`
-- [ ] T.5: `tinyspec focus` with no argument prints the currently focused spec
-- [ ] T.6: `tinyspec unfocus` removes `.tinyspec-focus`
-- [ ] T.7: Running `/tinyspec:do` with no arguments on a focused spec starts the correct spec
-- [ ] T.8: `tinyspec list` shows `→` marker next to the focused spec
+- [x] T.1: After running `/tinyspec:refine`, verify a `# Decisions` section is appended with at least one entry
+- [x] T.2: `tinyspec-do` reads the `# Decisions` section without erroring on specs that don't have one
+- [x] T.3: `/tinyspec:do --dry-run` prints a task list and repo summary without modifying any files
+- [x] T.4: `tinyspec focus my-spec` writes `my-spec` to `.tinyspec-focus`
+- [x] T.5: `tinyspec focus` with no argument prints the currently focused spec
+- [x] T.6: `tinyspec unfocus` removes `.tinyspec-focus`
+- [x] T.7: Running `/tinyspec:do` with no arguments on a focused spec starts the correct spec
+- [x] T.8: `tinyspec list` shows `→` marker next to the focused spec

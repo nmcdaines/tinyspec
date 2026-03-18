@@ -243,6 +243,12 @@ pub fn list(json: bool, include_archived: bool, tag: Option<&str>) -> Result<(),
         }
     }
 
+    // Read focused spec name for marker
+    let focused_spec = fs::read_to_string(focus_file_path())
+        .ok()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+
     let print_spec = |path: &std::path::Path| {
         let filename = path
             .file_name()
@@ -257,7 +263,12 @@ pub fn list(json: bool, include_archived: bool, tag: Option<&str>) -> Result<(),
             .and_then(|f| f.title.clone())
             .unwrap_or_else(|| "(no title)".into());
         let priority = fm.as_ref().and_then(|f| f.priority).unwrap_or_default();
-        println!("[{}] {spec_name:30} {title}", priority.label());
+        let marker = if focused_spec.as_deref() == Some(spec_name) {
+            "→ "
+        } else {
+            "  "
+        };
+        println!("{marker}[{}] {spec_name:30} {title}", priority.label());
     };
 
     // Print ungrouped specs first
@@ -500,28 +511,27 @@ fn check_task_impl(name: &str, task_id: &str, check: bool, fire_hooks: bool) -> 
         });
 
         // Fire spec-level transition hooks
-        if check
-            && let (Some(before), Some(after)) = (status_before, status_after) {
-                if before == SpecStatus::Pending && after == SpecStatus::InProgress {
-                    run_hooks(&HookContext {
-                        event: Event::OnSpecStart,
-                        spec_name: name.to_string(),
-                        spec_title: spec_title.clone(),
-                        spec_group: spec_group.clone(),
-                        task_id: task_id.to_string(),
-                        spec_path: spec_path_str.clone(),
-                    });
-                } else if after == SpecStatus::Completed {
-                    run_hooks(&HookContext {
-                        event: Event::OnSpecComplete,
-                        spec_name: name.to_string(),
-                        spec_title,
-                        spec_group,
-                        task_id: task_id.to_string(),
-                        spec_path: spec_path_str,
-                    });
-                }
+        if check && let (Some(before), Some(after)) = (status_before, status_after) {
+            if before == SpecStatus::Pending && after == SpecStatus::InProgress {
+                run_hooks(&HookContext {
+                    event: Event::OnSpecStart,
+                    spec_name: name.to_string(),
+                    spec_title: spec_title.clone(),
+                    spec_group: spec_group.clone(),
+                    task_id: task_id.to_string(),
+                    spec_path: spec_path_str.clone(),
+                });
+            } else if after == SpecStatus::Completed {
+                run_hooks(&HookContext {
+                    event: Event::OnSpecComplete,
+                    spec_name: name.to_string(),
+                    spec_title,
+                    spec_group,
+                    task_id: task_id.to_string(),
+                    spec_path: spec_path_str,
+                });
             }
+        }
     }
 
     Ok(())
@@ -643,5 +653,54 @@ pub fn diagram(name: &str) -> Result<(), String> {
     println!("Claude will analyze the spec's prose, identify sections that benefit");
     println!("from visualization, and propose Mermaid blocks with rationale for each.");
 
+    Ok(())
+}
+
+const FOCUS_FILE: &str = ".tinyspec-focus";
+
+/// Get the path to the focus file (at the git root or cwd).
+pub(crate) fn focus_file_path() -> std::path::PathBuf {
+    match discover_git_root() {
+        Some(root) => root.join(FOCUS_FILE),
+        None => std::path::PathBuf::from(FOCUS_FILE),
+    }
+}
+
+pub fn focus(spec_name: Option<&str>) -> Result<(), String> {
+    match spec_name {
+        Some(name) => {
+            // Validate spec exists
+            find_spec(name)?;
+            let path = focus_file_path();
+            fs::write(&path, format!("{name}\n"))
+                .map_err(|e| format!("Failed to write focus file: {e}"))?;
+            println!("Focused on spec: {name}");
+        }
+        None => {
+            let path = focus_file_path();
+            match fs::read_to_string(&path) {
+                Ok(content) => {
+                    let name = content.trim();
+                    if name.is_empty() {
+                        println!("No spec focused.");
+                    } else {
+                        println!("{name}");
+                    }
+                }
+                Err(_) => println!("No spec focused."),
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn unfocus() -> Result<(), String> {
+    let path = focus_file_path();
+    if path.exists() {
+        fs::remove_file(&path).map_err(|e| format!("Failed to remove focus file: {e}"))?;
+        println!("Unfocused.");
+    } else {
+        println!("No spec focused.");
+    }
     Ok(())
 }

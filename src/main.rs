@@ -193,6 +193,16 @@ enum Commands {
         #[arg(add = ArgValueCompleter::new(spec::complete_spec_names))]
         spec_name: String,
     },
+
+    /// Set the focused spec for the current project
+    Focus {
+        /// Spec name (omit to show current focus)
+        #[arg(add = ArgValueCompleter::new(spec::complete_spec_names))]
+        spec_name: Option<String>,
+    },
+
+    /// Clear the focused spec
+    Unfocus,
 }
 
 #[derive(Subcommand)]
@@ -318,6 +328,8 @@ fn main() {
             HooksAction::Test { event } => spec::hooks_test(&event),
         },
         Commands::Diagram { spec_name } => spec::diagram(&spec_name),
+        Commands::Focus { spec_name } => spec::focus(spec_name.as_deref()),
+        Commands::Unfocus => spec::unfocus(),
     };
 
     if let Err(e) = result {

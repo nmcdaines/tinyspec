@@ -53,6 +53,8 @@ depends_on:            # spec names that must be completed first
 - `tinyspec unarchive <spec>` — Move a spec back from the archive to its original group.
 - `tinyspec lint [<spec>|--all]` — Validate spec health (missing sections, empty sections, non-sequential IDs, unconfigured applications, unknown dependency references, circular dependencies). Exits non-zero on errors.
 - `tinyspec dashboard [--include-archived]` — Real-time TUI dashboard.
+- `tinyspec focus [<spec>]` — Set or show the focused spec. Skills use the focused spec when no argument is given.
+- `tinyspec unfocus` — Clear the focused spec. The `.tinyspec-focus` file is gitignored.
 
 ## Diagrams
 

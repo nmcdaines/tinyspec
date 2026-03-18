@@ -2635,3 +2635,140 @@ p
 
 // ─── T.8: oneshot executes specs in dependency-respecting order ──────────────
 // (This is a skill-level behavior, not a CLI test — verified by the skill update)
+
+// ─── skill-improvements tests ────────────────────────────────────────────────
+
+// T.1: After refine, Decisions section is appended (skill-level, not CLI-testable)
+
+// T.2: tinyspec-do reads Decisions section without error on specs without it
+// (Already works — skills just use tinyspec view which prints the full body)
+
+// T.3: /tinyspec:do --dry-run is skill-level behavior (tested via skill)
+
+// ─── T.4: focus writes .tinyspec-focus ───────────────────────────────────────
+
+#[test]
+fn t68_focus_writes_focus_file() {
+    let dir = TempDir::new().unwrap();
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-my-feature.md",
+        &sample_spec_content(),
+    );
+
+    tinyspec(&dir)
+        .args(["focus", "my-feature"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Focused on spec: my-feature"));
+
+    let focus_content = fs::read_to_string(dir.path().join(".tinyspec-focus")).unwrap();
+    assert_eq!(focus_content.trim(), "my-feature");
+}
+
+// ─── T.5: focus with no argument prints current focus ────────────────────────
+
+#[test]
+fn t69_focus_shows_current() {
+    let dir = TempDir::new().unwrap();
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-my-feature.md",
+        &sample_spec_content(),
+    );
+
+    // Set focus first
+    tinyspec(&dir)
+        .args(["focus", "my-feature"])
+        .assert()
+        .success();
+
+    // Check current focus
+    tinyspec(&dir)
+        .args(["focus"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("my-feature"));
+}
+
+// ─── T.6: unfocus removes .tinyspec-focus ────────────────────────────────────
+
+#[test]
+fn t70_unfocus_removes_focus_file() {
+    let dir = TempDir::new().unwrap();
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-my-feature.md",
+        &sample_spec_content(),
+    );
+
+    // Set focus first
+    tinyspec(&dir)
+        .args(["focus", "my-feature"])
+        .assert()
+        .success();
+
+    // Unfocus
+    tinyspec(&dir).args(["unfocus"]).assert().success();
+
+    // Focus file should be gone
+    assert!(!dir.path().join(".tinyspec-focus").exists());
+}
+
+// T.7: /tinyspec:do with no args uses focused spec (skill-level, not CLI-testable)
+
+// ─── T.8: list shows → marker next to focused spec ──────────────────────────
+
+#[test]
+fn t71_list_shows_focus_marker() {
+    let dir = TempDir::new().unwrap();
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-my-feature.md",
+        &sample_spec_content(),
+    );
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-01-other-spec.md",
+        "\
+---
+tinySpec: v0
+title: Other Spec
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    // Set focus on my-feature
+    tinyspec(&dir)
+        .args(["focus", "my-feature"])
+        .assert()
+        .success();
+
+    // List should show → marker on my-feature but not other-spec
+    let output = tinyspec(&dir).args(["list"]).output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    let my_feature_line = stdout.lines().find(|l| l.contains("my-feature")).unwrap();
+    assert!(
+        my_feature_line.starts_with("→"),
+        "Focused spec should have → marker, got: {my_feature_line}"
+    );
+
+    let other_line = stdout.lines().find(|l| l.contains("other-spec")).unwrap();
+    assert!(
+        !other_line.starts_with("→"),
+        "Non-focused spec should not have → marker"
+    );
+}

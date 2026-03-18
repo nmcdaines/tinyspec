@@ -463,15 +463,28 @@ fn ui(frame: &mut Frame, app: &mut App) {
 
     // Title bar
     let title = match app.mode {
-        Mode::List => Line::from(vec![
-            Span::styled(
-                " tinyspec",
-                Style::default()
-                    .fg(Color::Cyan)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::raw(" dashboard"),
-        ]),
+        Mode::List => {
+            let mut spans = vec![
+                Span::styled(
+                    " tinyspec",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" dashboard"),
+            ];
+            // Show focused spec in the title bar
+            if let Ok(content) = std::fs::read_to_string(super::commands::focus_file_path()) {
+                let focused = content.trim();
+                if !focused.is_empty() {
+                    spans.push(Span::styled(
+                        format!("  → {focused}"),
+                        Style::default().fg(Color::Yellow),
+                    ));
+                }
+            }
+            Line::from(spans)
+        }
         Mode::Detail => {
             let spec = &app.specs[app.detail.spec_index];
             let has_tests = !spec.test_tasks.is_empty();

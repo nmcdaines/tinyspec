@@ -38,21 +38,22 @@ pub fn search(
 
         // Status filter
         if let Some(status) = status_filter
-            && let Some(summary) = load_spec_summary(path) {
-                let matches = match status {
-                    "pending" => summary.status == SpecStatus::Pending,
-                    "in-progress" => summary.status == SpecStatus::InProgress,
-                    "completed" => summary.status == SpecStatus::Completed,
-                    _ => {
-                        return Err(format!(
-                            "Invalid status filter '{status}'. Use: pending, in-progress, completed"
-                        ));
-                    }
-                };
-                if !matches {
-                    continue;
+            && let Some(summary) = load_spec_summary(path)
+        {
+            let matches = match status {
+                "pending" => summary.status == SpecStatus::Pending,
+                "in-progress" => summary.status == SpecStatus::InProgress,
+                "completed" => summary.status == SpecStatus::Completed,
+                _ => {
+                    return Err(format!(
+                        "Invalid status filter '{status}'. Use: pending, in-progress, completed"
+                    ));
                 }
+            };
+            if !matches {
+                continue;
             }
+        }
 
         let content = match fs::read_to_string(path) {
             Ok(c) => c,

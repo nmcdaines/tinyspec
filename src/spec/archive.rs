@@ -78,11 +78,12 @@ pub fn archive_all_completed() -> Result<(), String> {
 
     for path in &files {
         if let Some(summary) = load_spec_summary(path)
-            && summary.status == SpecStatus::Completed {
-                let name = summary.name.clone();
-                archive_spec(&name)?;
-                count += 1;
-            }
+            && summary.status == SpecStatus::Completed
+        {
+            let name = summary.name.clone();
+            archive_spec(&name)?;
+            count += 1;
+        }
     }
 
     if count == 0 {
@@ -147,23 +148,24 @@ pub(crate) fn collect_spec_files_with_archived() -> Result<Vec<PathBuf>, String>
 
     let archive_root = archive_dir();
     if archive_root.exists()
-        && let Ok(entries) = fs::read_dir(&archive_root) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if path.is_dir() {
-                    if let Ok(sub_entries) = fs::read_dir(&path) {
-                        for sub_entry in sub_entries.flatten() {
-                            let sub_path = sub_entry.path();
-                            if sub_path.extension().is_some_and(|ext| ext == "md") {
-                                files.push(sub_path);
-                            }
+        && let Ok(entries) = fs::read_dir(&archive_root)
+    {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if let Ok(sub_entries) = fs::read_dir(&path) {
+                    for sub_entry in sub_entries.flatten() {
+                        let sub_path = sub_entry.path();
+                        if sub_path.extension().is_some_and(|ext| ext == "md") {
+                            files.push(sub_path);
                         }
                     }
-                } else if path.extension().is_some_and(|ext| ext == "md") {
-                    files.push(path);
                 }
+            } else if path.extension().is_some_and(|ext| ext == "md") {
+                files.push(path);
             }
         }
+    }
 
     Ok(files)
 }
