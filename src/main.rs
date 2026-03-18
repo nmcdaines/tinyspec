@@ -45,6 +45,9 @@ enum Commands {
         /// Include archived specs
         #[arg(long)]
         include_archived: bool,
+        /// Filter by tag
+        #[arg(long)]
+        tag: Option<String>,
     },
 
     /// Display the contents of a spec
@@ -119,6 +122,9 @@ enum Commands {
         /// Ignore test tasks when computing completion
         #[arg(long)]
         skip_tests: bool,
+        /// Filter by tag
+        #[arg(long)]
+        tag: Option<String>,
     },
 
     /// Manage repository configuration (~/.tinyspec/config.yaml)
@@ -237,7 +243,8 @@ fn main() {
         Commands::List {
             json,
             include_archived,
-        } => spec::list(json, include_archived),
+            tag,
+        } => spec::list(json, include_archived, tag.as_deref()),
         Commands::View { spec_name, json } => spec::view(&spec_name, json),
         Commands::Edit { spec_name } => spec::edit(&spec_name),
         Commands::Delete { spec_name } => spec::delete(&spec_name),
@@ -275,7 +282,14 @@ fn main() {
             json,
             include_archived,
             skip_tests,
-        } => spec::status(spec_name.as_deref(), json, include_archived, skip_tests),
+            tag,
+        } => spec::status(
+            spec_name.as_deref(),
+            json,
+            include_archived,
+            skip_tests,
+            tag.as_deref(),
+        ),
         Commands::Config { action } => match action {
             ConfigAction::Set { repo_name, path } => spec::config_set(&repo_name, &path),
             ConfigAction::List => spec::config_list(),

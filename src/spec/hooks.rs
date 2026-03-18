@@ -112,8 +112,12 @@ pub fn run_hooks(context: &HookContext) {
 
 /// Fire a named event with dummy context data (for `tinyspec hooks test`).
 pub fn test_hook(event_name: &str) -> Result<(), String> {
-    let event =
-        Event::from_str(event_name).ok_or_else(|| format!("Unknown event '{event_name}'.\nValid events: {}", Event::all_names().join(", ")))?;
+    let event = Event::from_str(event_name).ok_or_else(|| {
+        format!(
+            "Unknown event '{event_name}'.\nValid events: {}",
+            Event::all_names().join(", ")
+        )
+    })?;
 
     let hooks = load_merged_hooks()?;
     let commands = hooks.get(event_name).cloned().unwrap_or_default();

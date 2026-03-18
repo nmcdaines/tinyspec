@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use super::config::load_config;
-use super::summary::parse_tasks_from_content;
+use super::summary::{detect_dependency_cycles, load_all_summaries, parse_tasks_from_content};
 use super::{collect_spec_files, find_spec, parse_front_matter};
 
 #[derive(Debug)]
@@ -59,7 +59,9 @@ pub fn lint_file(path: &Path) -> Vec<LintIssue> {
     // Check required sections
     for section in REQUIRED_SECTIONS {
         if !content.contains(section) {
-            issues.push(LintIssue::error(format!("Missing required section '{section}'")));
+            issues.push(LintIssue::error(format!(
+                "Missing required section '{section}'"
+            )));
         }
     }
 
@@ -71,14 +73,13 @@ pub fn lint_file(path: &Path) -> Vec<LintIssue> {
         let trimmed = line.trim();
         if trimmed.starts_with("# ") && !trimmed.starts_with("## ") {
             // Finish previous section check
-            if let Some((heading_line, heading)) = current_heading_line {
-                if !section_has_content {
+            if let Some((heading_line, heading)) = current_heading_line
+                && !section_has_content {
                     issues.push(LintIssue::error_at(
                         format!("Section '{heading}' is empty"),
                         heading_line + 1,
                     ));
                 }
-            }
             current_heading_line = Some((i, trimmed));
             section_has_content = false;
         } else if current_heading_line.is_some() && !trimmed.is_empty() {
@@ -86,19 +87,20 @@ pub fn lint_file(path: &Path) -> Vec<LintIssue> {
         }
     }
     // Check last section
-    if let Some((heading_line, heading)) = current_heading_line {
-        if !section_has_content {
+    if let Some((heading_line, heading)) = current_heading_line
+        && !section_has_content {
             issues.push(LintIssue::error_at(
                 format!("Section '{heading}' is empty"),
                 heading_line + 1,
             ));
         }
-    }
 
     // Check task IDs are sequential
     let tasks = parse_tasks_from_content(&content);
     if tasks.is_empty() {
-        issues.push(LintIssue::warning("Spec has no tasks in Implementation Plan"));
+        issues.push(LintIssue::warning(
+            "Spec has no tasks in Implementation Plan",
+        ));
     } else {
         // Validate top-level tasks are sequential letters (A, B, C, ...)
         for (idx, task) in tasks.iter().enumerate() {
@@ -133,8 +135,8 @@ pub fn lint_file(path: &Path) -> Vec<LintIssue> {
         })
         .unwrap_or_default();
 
-    if !apps.is_empty() {
-        if let Ok(config) = load_config() {
+    if !apps.is_empty()
+        && let Ok(config) = load_config() {
             for app in &apps {
                 if !config.repositories.contains_key(app.as_str()) {
                     issues.push(LintIssue::warning(format!(
@@ -143,7 +145,6 @@ pub fn lint_file(path: &Path) -> Vec<LintIssue> {
                 }
             }
         }
-    }
 
     issues
 }
@@ -163,8 +164,33 @@ pub fn lint(spec_name: Option<&str>, all: bool) -> Result<(), String> {
     let mut has_errors = false;
     let mut any_issues = false;
 
+    // Collect all known spec names for dependency validation
+    let all_files = collect_spec_files().unwrap_or_default();
+    let all_spec_names: std::collections::HashSet<String> = all_files
+        .iter()
+        .filter_map(|p| {
+            p.file_name()
+                .and_then(|f| f.to_str())
+                .and_then(|f| super::extract_spec_name(f))
+                .map(String::from)
+        })
+        .collect();
+
     for path in &files {
-        let issues = lint_file(path);
+        let mut issues = lint_file(path);
+
+        // Check depends_on references
+        let content = std::fs::read_to_string(path).unwrap_or_default();
+        if let Some(fm) = parse_front_matter(&content) {
+            for dep in &fm.depends_on {
+                if !all_spec_names.contains(dep) {
+                    issues.push(LintIssue::warning(format!(
+                        "depends_on references unknown spec '{dep}'"
+                    )));
+                }
+            }
+        }
+
         if issues.is_empty() {
             continue;
         }
@@ -193,6 +219,18 @@ pub fn lint(spec_name: Option<&str>, all: bool) -> Result<(), String> {
             }
         }
     }
+
+    // Check for circular dependencies across all specs
+    if let Ok(summaries) = load_all_summaries()
+        && let Err(cycle) = detect_dependency_cycles(&summaries) {
+            any_issues = true;
+            has_errors = true;
+            println!("(dependency cycle):");
+            println!(
+                "  [error] Circular dependency detected among specs: {}",
+                cycle.join(", ")
+            );
+        }
 
     if !any_issues {
         println!("All specs are clean.");

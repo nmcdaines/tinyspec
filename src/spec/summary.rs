@@ -4,7 +4,7 @@ use std::path::Path;
 
 use serde::Serialize;
 
-use super::{collect_spec_files, extract_spec_name, parse_front_matter, specs_dir};
+use super::{Priority, collect_spec_files, extract_spec_name, parse_front_matter, specs_dir};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct TaskNode {
@@ -54,6 +54,10 @@ pub struct SpecSummary {
     pub total_tests: u32,
     pub checked_tests: u32,
     pub status: SpecStatus,
+    pub priority: Priority,
+    pub tags: Vec<String>,
+    pub depends_on: Vec<String>,
+    pub blocked: bool,
     pub tasks: Vec<TaskNode>,
     pub test_tasks: Vec<TaskNode>,
 }
@@ -166,9 +170,17 @@ pub fn load_spec_summary(path: &Path) -> Option<SpecSummary> {
     let timestamp = extract_timestamp(filename);
     let content = fs::read_to_string(path).ok()?;
 
-    let title = parse_front_matter(&content)
-        .and_then(|fm| fm.title)
+    let fm = parse_front_matter(&content);
+    let title = fm
+        .as_ref()
+        .and_then(|f| f.title.clone())
         .unwrap_or_else(|| name.clone());
+    let priority = fm.as_ref().and_then(|f| f.priority).unwrap_or_default();
+    let tags = fm.as_ref().map(|f| f.tags.clone()).unwrap_or_default();
+    let depends_on = fm
+        .as_ref()
+        .map(|f| f.depends_on.clone())
+        .unwrap_or_default();
 
     let group = {
         let specs_root = specs_dir();
@@ -209,13 +221,91 @@ pub fn load_spec_summary(path: &Path) -> Option<SpecSummary> {
         total_tests,
         checked_tests,
         status,
+        priority,
+        tags,
+        depends_on,
+        blocked: false, // resolved later by load_all_summaries
         tasks,
         test_tasks,
     })
 }
 
+/// Perform a topological sort of spec names based on `depends_on`.
+/// Returns `Err` with the cycle participants if a cycle is detected.
+pub fn detect_dependency_cycles(summaries: &[SpecSummary]) -> Result<Vec<String>, Vec<String>> {
+    use std::collections::{HashMap, VecDeque};
+
+    // Build adjacency map: spec -> depends_on specs
+    let mut in_degree: HashMap<&str, usize> = HashMap::new();
+    let mut dependents: HashMap<&str, Vec<&str>> = HashMap::new();
+
+    for s in summaries {
+        in_degree.entry(&s.name).or_insert(0);
+        for dep in &s.depends_on {
+            // Only count deps that reference known specs
+            if summaries.iter().any(|other| other.name == *dep) {
+                *in_degree.entry(&s.name).or_insert(0) += 1;
+                dependents.entry(dep.as_str()).or_default().push(&s.name);
+            }
+        }
+    }
+
+    // Kahn's algorithm
+    let mut queue: VecDeque<&str> = in_degree
+        .iter()
+        .filter(|&(_, &deg)| deg == 0)
+        .map(|(&name, _)| name)
+        .collect();
+
+    let mut sorted = Vec::new();
+    while let Some(node) = queue.pop_front() {
+        sorted.push(node.to_string());
+        if let Some(deps) = dependents.get(node) {
+            for &dep in deps {
+                if let Some(deg) = in_degree.get_mut(dep) {
+                    *deg -= 1;
+                    if *deg == 0 {
+                        queue.push_back(dep);
+                    }
+                }
+            }
+        }
+    }
+
+    if sorted.len() == in_degree.len() {
+        Ok(sorted)
+    } else {
+        // Specs not in sorted are in cycles
+        let cycle: Vec<String> = in_degree
+            .iter()
+            .filter(|&(_, &deg)| deg > 0)
+            .map(|(&name, _)| name.to_string())
+            .collect();
+        Err(cycle)
+    }
+}
+
+/// Resolve `blocked` field for all summaries based on `depends_on` references.
+fn resolve_blocked(summaries: &mut [SpecSummary]) {
+    // Collect completed spec names
+    let completed: std::collections::HashSet<String> = summaries
+        .iter()
+        .filter(|s| s.status == SpecStatus::Completed)
+        .map(|s| s.name.clone())
+        .collect();
+
+    for summary in summaries.iter_mut() {
+        if !summary.depends_on.is_empty() {
+            summary.blocked = summary
+                .depends_on
+                .iter()
+                .any(|dep| !completed.contains(dep));
+        }
+    }
+}
+
 /// Load all specs and return them sorted by completion (incomplete first, then completed),
-/// then by group name, then by timestamp within each group.
+/// then by priority within status group, then by group name, then by timestamp.
 pub fn load_all_summaries() -> Result<Vec<SpecSummary>, String> {
     let files = collect_spec_files()?;
     let mut summaries: Vec<SpecSummary> = files
@@ -223,11 +313,14 @@ pub fn load_all_summaries() -> Result<Vec<SpecSummary>, String> {
         .filter_map(|path| load_spec_summary(path))
         .collect();
 
+    resolve_blocked(&mut summaries);
+
     summaries.sort_by(|a, b| {
         let a_done = a.status == SpecStatus::Completed;
         let b_done = b.status == SpecStatus::Completed;
         a_done
             .cmp(&b_done) // incomplete (false) before completed (true)
+            .then_with(|| a.priority.cmp(&b.priority)) // High < Medium < Low
             .then_with(|| a.group.cmp(&b.group))
             .then_with(|| {
                 if a_done && b_done {

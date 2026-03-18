@@ -12,8 +12,10 @@ pub(crate) mod templates;
 
 // Re-export public API (keeps `spec::function_name` working from main.rs)
 pub use archive::{archive_all_completed, archive_spec, unarchive_spec};
-pub use commands::{check_task, check_task_no_hooks, delete, diagram, edit, list, new_spec,
-    new_spec_with_hooks, status, view};
+pub use commands::{
+    check_task, check_task_no_hooks, delete, diagram, edit, list, new_spec, new_spec_with_hooks,
+    status, view,
+};
 pub use config::{config_list, config_remove, config_set};
 pub use format::{format_all_specs, format_spec};
 pub use hooks::test_hook as hooks_test;
@@ -26,7 +28,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use clap_complete::engine::CompletionCandidate;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 const SPECS_DIR: &str = ".specs";
 const TIMESTAMP_PREFIX_LEN: usize = 17; // "YYYY-MM-DD-HH-MM-"
@@ -87,7 +89,10 @@ pub(crate) fn collect_spec_files() -> Result<Vec<PathBuf>, String> {
         let path = entry.path();
         if path.is_dir() {
             // Skip the templates and archive directories
-            if path.file_name().is_some_and(|n| n == "templates" || n == "archive") {
+            if path
+                .file_name()
+                .is_some_and(|n| n == "templates" || n == "archive")
+            {
                 continue;
             }
             // One level of subdirectories
@@ -162,11 +167,38 @@ pub fn complete_spec_names(current: &std::ffi::OsStr) -> Vec<CompletionCandidate
 // Front matter
 // ---------------------------------------------------------------------------
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+#[derive(Default)]
+pub(crate) enum Priority {
+    High,
+    #[default]
+    Medium,
+    Low,
+}
+
+
+impl Priority {
+    pub(crate) fn label(&self) -> &'static str {
+        match self {
+            Priority::High => "H",
+            Priority::Medium => "M",
+            Priority::Low => "L",
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub(crate) struct FrontMatter {
     pub(crate) title: Option<String>,
     #[serde(default)]
     pub(crate) applications: Vec<String>,
+    #[serde(default)]
+    pub(crate) priority: Option<Priority>,
+    #[serde(default)]
+    pub(crate) tags: Vec<String>,
+    #[serde(default)]
+    pub(crate) depends_on: Vec<String>,
 }
 
 pub(crate) fn parse_front_matter(content: &str) -> Option<FrontMatter> {

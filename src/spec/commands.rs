@@ -4,7 +4,6 @@ use std::process::Command;
 
 use serde::Serialize;
 
-
 use chrono::Local;
 
 use super::config::{config_path, load_config};
@@ -123,6 +122,9 @@ fn new_spec_impl(input: &str, template_name: Option<&str>, fire_hooks: bool) -> 
 ---
 tinySpec: v0
 title: {title}
+# priority: high        # high | medium | low (default: medium)
+# tags: []              # arbitrary string labels for filtering
+# depends_on: []        # spec names that must complete first
 applications:
     -
 ---
@@ -176,7 +178,7 @@ flowchart LR
     Ok(())
 }
 
-pub fn list(json: bool, include_archived: bool) -> Result<(), String> {
+pub fn list(json: bool, include_archived: bool, tag: Option<&str>) -> Result<(), String> {
     use super::archive::collect_spec_files_with_archived;
     use super::summary::load_spec_summary;
 
@@ -199,7 +201,10 @@ pub fn list(json: bool, include_archived: bool) -> Result<(), String> {
     files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
 
     if json {
-        let summaries: Vec<_> = files.iter().filter_map(|p| load_spec_summary(p)).collect();
+        let mut summaries: Vec<_> = files.iter().filter_map(|p| load_spec_summary(p)).collect();
+        if let Some(tag_filter) = tag {
+            summaries.retain(|s| s.tags.iter().any(|t| t == tag_filter));
+        }
         let out = serde_json::to_string_pretty(&summaries)
             .map_err(|e| format!("Failed to serialize JSON: {e}"))?;
         println!("{out}");
@@ -213,6 +218,18 @@ pub fn list(json: bool, include_archived: bool) -> Result<(), String> {
         std::collections::BTreeMap::new();
 
     for path in &files {
+        // Apply tag filter
+        if let Some(tag_filter) = tag {
+            let content = fs::read_to_string(path).unwrap_or_default();
+            let fm = parse_front_matter(&content);
+            let has_tag = fm
+                .map(|f| f.tags.iter().any(|t| t == tag_filter))
+                .unwrap_or(false);
+            if !has_tag {
+                continue;
+            }
+        }
+
         let parent = path.parent().unwrap_or(&specs_root);
         if parent == specs_root {
             ungrouped.push(path);
@@ -234,10 +251,13 @@ pub fn list(json: bool, include_archived: bool) -> Result<(), String> {
             .to_string();
         let spec_name = extract_spec_name(&filename).unwrap_or(&filename);
         let content = fs::read_to_string(path).unwrap_or_default();
-        let title = parse_front_matter(&content)
-            .and_then(|fm| fm.title)
+        let fm = parse_front_matter(&content);
+        let title = fm
+            .as_ref()
+            .and_then(|f| f.title.clone())
             .unwrap_or_else(|| "(no title)".into());
-        println!("{spec_name:30} {title}");
+        let priority = fm.as_ref().and_then(|f| f.priority).unwrap_or_default();
+        println!("[{}] {spec_name:30} {title}", priority.label());
     };
 
     // Print ungrouped specs first
@@ -278,7 +298,12 @@ pub fn view(name: &str, json: bool) -> Result<(), String> {
         let fm = parse_front_matter(&content);
         let title = fm.as_ref().and_then(|f| f.title.clone());
         let applications = fm
-            .map(|f| f.applications.into_iter().filter(|a| !a.is_empty()).collect())
+            .map(|f| {
+                f.applications
+                    .into_iter()
+                    .filter(|a| !a.is_empty())
+                    .collect()
+            })
             .unwrap_or_default();
         let summary = load_spec_summary(&path);
         let tasks = summary.map(|s| s.tasks).unwrap_or_default();
@@ -475,8 +500,8 @@ fn check_task_impl(name: &str, task_id: &str, check: bool, fire_hooks: bool) -> 
         });
 
         // Fire spec-level transition hooks
-        if check {
-            if let (Some(before), Some(after)) = (status_before, status_after) {
+        if check
+            && let (Some(before), Some(after)) = (status_before, status_after) {
                 if before == SpecStatus::Pending && after == SpecStatus::InProgress {
                     run_hooks(&HookContext {
                         event: Event::OnSpecStart,
@@ -497,7 +522,6 @@ fn check_task_impl(name: &str, task_id: &str, check: bool, fire_hooks: bool) -> 
                     });
                 }
             }
-        }
     }
 
     Ok(())
@@ -508,19 +532,22 @@ pub fn status(
     json: bool,
     include_archived: bool,
     skip_tests: bool,
+    tag: Option<&str>,
 ) -> Result<(), String> {
     use super::archive::collect_spec_files_with_archived;
-    use super::summary::load_spec_summary;
+    use super::summary::{load_all_summaries, load_spec_summary};
 
     let format_status = |summary: &super::summary::SpecSummary| -> String {
+        let blocked = if summary.blocked { " BLOCKED" } else { "" };
+        let priority = format!("[{}]", summary.priority.label());
         if skip_tests || summary.total_tests == 0 {
             format!(
-                "{}: {}/{} tasks complete",
+                "{priority} {}: {}/{} tasks complete{blocked}",
                 summary.name, summary.checked, summary.total
             )
         } else {
             format!(
-                "{}: {}/{} impl, {}/{} tests",
+                "{priority} {}: {}/{} impl, {}/{} tests{blocked}",
                 summary.name,
                 summary.checked,
                 summary.total,
@@ -533,8 +560,23 @@ pub fn status(
     match name {
         Some(name) => {
             let path = find_spec(name)?;
-            let summary =
+            let mut summary =
                 load_spec_summary(&path).ok_or_else(|| format!("Failed to load spec '{name}'"))?;
+
+            // Resolve blocked status by checking deps
+            if !summary.depends_on.is_empty() {
+                let all = load_all_summaries()?;
+                let completed: std::collections::HashSet<&str> = all
+                    .iter()
+                    .filter(|s| s.status == super::summary::SpecStatus::Completed)
+                    .map(|s| s.name.as_str())
+                    .collect();
+                summary.blocked = summary
+                    .depends_on
+                    .iter()
+                    .any(|dep| !completed.contains(dep.as_str()));
+            }
+
             if json {
                 let out = serde_json::to_string_pretty(&summary)
                     .map_err(|e| format!("Failed to serialize JSON: {e}"))?;
@@ -544,7 +586,7 @@ pub fn status(
             }
         }
         None => {
-            let mut files = if include_archived {
+            let files = if include_archived {
                 collect_spec_files_with_archived()?
             } else {
                 collect_spec_files()?
@@ -559,19 +601,21 @@ pub fn status(
                 return Ok(());
             }
 
-            files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
+            // Use load_all_summaries to get blocked status resolved
+            let mut summaries = load_all_summaries()?;
+
+            // Apply tag filter
+            if let Some(tag_filter) = tag {
+                summaries.retain(|s| s.tags.iter().any(|t| t == tag_filter));
+            }
 
             if json {
-                let summaries: Vec<_> =
-                    files.iter().filter_map(|p| load_spec_summary(p)).collect();
                 let out = serde_json::to_string_pretty(&summaries)
                     .map_err(|e| format!("Failed to serialize JSON: {e}"))?;
                 println!("{out}");
             } else {
-                for path in &files {
-                    if let Some(summary) = load_spec_summary(path) {
-                        println!("{}", format_status(&summary));
-                    }
+                for summary in &summaries {
+                    println!("{}", format_status(summary));
                 }
             }
         }

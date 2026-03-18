@@ -28,15 +28,30 @@ The `# Test Plan` section is fully tracked alongside `# Implementation Plan`. Te
 - `/tinyspec:task <spec-name> <task-id>` — Implement a single task (supports both impl `A.1` and test `T.1` IDs).
 - `/tinyspec:oneshot [prompt]` — Execute all pending specs or generate and execute from a prompt.
 
+## Spec metadata
+
+Front matter supports optional metadata fields for prioritization, tagging, and dependency tracking:
+
+```yaml
+priority: high         # high | medium | low (default: medium)
+tags: [auth, api]      # arbitrary string labels
+depends_on:            # spec names that must be completed first
+  - other-spec-name
+```
+
+- **Priority** controls sort order in `tinyspec list` and `tinyspec status` (high specs appear first within their status group). Shown as `[H]`, `[M]`, or `[L]` indicators.
+- **Tags** enable filtering: `tinyspec list --tag auth` and `tinyspec status --tag auth`.
+- **`depends_on`** marks a spec as `BLOCKED` in status output if any dependency is incomplete. `tinyspec lint` warns on unknown references and reports circular dependencies.
+
 ## CLI commands reference
 
 - `tinyspec search <query> [--group <name>] [--status pending|in-progress|completed]` — Full-text search across spec titles and body content.
-- `tinyspec list [--json] [--include-archived]` — List specs; `--json` returns a JSON array of all spec summaries.
-- `tinyspec status [<spec>] [--json] [--include-archived]` — Show task completion; `--json` returns the full task tree.
+- `tinyspec list [--json] [--include-archived] [--tag <tag>]` — List specs; `--json` returns a JSON array of all spec summaries.
+- `tinyspec status [<spec>] [--json] [--include-archived] [--tag <tag>]` — Show task completion; `--json` returns the full task tree.
 - `tinyspec view <spec> [--json]` — Display spec contents; `--json` returns front matter fields and task tree.
 - `tinyspec archive [<spec>|--all-completed]` — Move spec(s) to `.specs/archive/`; archived specs are hidden by default.
 - `tinyspec unarchive <spec>` — Move a spec back from the archive to its original group.
-- `tinyspec lint [<spec>|--all]` — Validate spec health (missing sections, empty sections, non-sequential IDs, unconfigured applications). Exits non-zero on errors.
+- `tinyspec lint [<spec>|--all]` — Validate spec health (missing sections, empty sections, non-sequential IDs, unconfigured applications, unknown dependency references, circular dependencies). Exits non-zero on errors.
 - `tinyspec dashboard [--include-archived]` — Real-time TUI dashboard.
 
 ## Diagrams

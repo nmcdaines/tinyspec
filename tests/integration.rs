@@ -1918,9 +1918,11 @@ More prose follows.
         .assert()
         .success();
 
-    let formatted =
-        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-mermaid-flowchart.md"))
-            .unwrap();
+    let formatted = fs::read_to_string(
+        dir.path()
+            .join(".specs/2025-03-01-10-00-mermaid-flowchart.md"),
+    )
+    .unwrap();
 
     assert!(
         formatted.contains("```mermaid\nflowchart TD"),
@@ -1940,10 +1942,15 @@ More prose follows.
         .args(["format", "mermaid-flowchart"])
         .assert()
         .success();
-    let second =
-        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-00-mermaid-flowchart.md"))
-            .unwrap();
-    assert_eq!(formatted, second, "Formatter should be idempotent for flowchart");
+    let second = fs::read_to_string(
+        dir.path()
+            .join(".specs/2025-03-01-10-00-mermaid-flowchart.md"),
+    )
+    .unwrap();
+    assert_eq!(
+        formatted, second,
+        "Formatter should be idempotent for flowchart"
+    );
 }
 
 // ─── T.57: Format preserves Mermaid sequenceDiagram block unchanged ──────────
@@ -1983,9 +1990,11 @@ End of background.
         .assert()
         .success();
 
-    let formatted =
-        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-01-mermaid-sequence.md"))
-            .unwrap();
+    let formatted = fs::read_to_string(
+        dir.path()
+            .join(".specs/2025-03-01-10-01-mermaid-sequence.md"),
+    )
+    .unwrap();
 
     assert!(
         formatted.contains("```mermaid\nsequenceDiagram"),
@@ -2005,10 +2014,15 @@ End of background.
         .args(["format", "mermaid-sequence"])
         .assert()
         .success();
-    let second =
-        fs::read_to_string(dir.path().join(".specs/2025-03-01-10-01-mermaid-sequence.md"))
-            .unwrap();
-    assert_eq!(formatted, second, "Formatter should be idempotent for sequenceDiagram");
+    let second = fs::read_to_string(
+        dir.path()
+            .join(".specs/2025-03-01-10-01-mermaid-sequence.md"),
+    )
+    .unwrap();
+    assert_eq!(
+        formatted, second,
+        "Formatter should be idempotent for sequenceDiagram"
+    );
 }
 
 // ─── T.58: Format preserves Mermaid stateDiagram-v2 block unchanged ──────────
@@ -2069,7 +2083,10 @@ The spec moves between states.
         .success();
     let second =
         fs::read_to_string(dir.path().join(".specs/2025-03-01-10-02-mermaid-state.md")).unwrap();
-    assert_eq!(formatted, second, "Formatter should be idempotent for stateDiagram-v2");
+    assert_eq!(
+        formatted, second,
+        "Formatter should be idempotent for stateDiagram-v2"
+    );
 }
 
 // ─── T.59: Format preserves Mermaid erDiagram block unchanged ────────────────
@@ -2135,7 +2152,10 @@ Entities and their relationships.
         .success();
     let second =
         fs::read_to_string(dir.path().join(".specs/2025-03-01-10-03-mermaid-er.md")).unwrap();
-    assert_eq!(formatted, second, "Formatter should be idempotent for erDiagram");
+    assert_eq!(
+        formatted, second,
+        "Formatter should be idempotent for erDiagram"
+    );
 }
 
 // ─── T.60: Format preserves Mermaid graph block unchanged ────────────────────
@@ -2196,5 +2216,422 @@ Dependencies flow left to right.
         .success();
     let second =
         fs::read_to_string(dir.path().join(".specs/2025-03-01-10-04-mermaid-graph.md")).unwrap();
-    assert_eq!(formatted, second, "Formatter should be idempotent for graph");
+    assert_eq!(
+        formatted, second,
+        "Formatter should be idempotent for graph"
+    );
 }
+
+// ─── T.1: Parse front matter with priority, tags, depends_on ──────────────────
+
+fn spec_with_metadata() -> String {
+    "\
+---
+tinySpec: v0
+title: My Feature
+priority: high
+tags: [auth, api]
+depends_on:
+  - other-spec
+applications: []
+---
+
+# Background
+
+Some background.
+
+# Proposal
+
+Some proposal.
+
+# Implementation Plan
+
+- [ ] A: Do this
+  - [ ] A.1: Subtask
+
+# Test Plan
+
+- [ ] T.1: Test
+"
+    .to_string()
+}
+
+#[test]
+fn t61_parse_front_matter_with_metadata() {
+    let dir = TempDir::new().unwrap();
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-my-feature.md",
+        &spec_with_metadata(),
+    );
+
+    // status --json should include priority, tags, depends_on
+    tinyspec(&dir)
+        .args(["status", "my-feature", "--json"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"priority\": \"high\""))
+        .stdout(predicate::str::contains("\"tags\""))
+        .stdout(predicate::str::contains("auth"))
+        .stdout(predicate::str::contains("api"))
+        .stdout(predicate::str::contains("depends_on"))
+        .stdout(predicate::str::contains("other-spec"));
+}
+
+// ─── T.2: list sorts high priority first within status group ──────────────────
+
+#[test]
+fn t62_list_sorts_by_priority() {
+    let dir = TempDir::new().unwrap();
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-low-pri.md",
+        "\
+---
+tinySpec: v0
+title: Low Priority
+priority: low
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-01-high-pri.md",
+        "\
+---
+tinySpec: v0
+title: High Priority
+priority: high
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    // status output should show high-pri before low-pri
+    let output = tinyspec(&dir).args(["status"]).output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let high_pos = stdout.find("high-pri").unwrap();
+    let low_pos = stdout.find("low-pri").unwrap();
+    assert!(
+        high_pos < low_pos,
+        "High priority spec should appear before low priority"
+    );
+}
+
+// ─── T.3: list --tag filters by tag ──────────────────────────────────────────
+
+#[test]
+fn t63_list_tag_filter() {
+    let dir = TempDir::new().unwrap();
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-tagged.md",
+        "\
+---
+tinySpec: v0
+title: Tagged Spec
+tags: [auth]
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-01-untagged.md",
+        "\
+---
+tinySpec: v0
+title: Untagged Spec
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    tinyspec(&dir)
+        .args(["list", "--tag", "auth"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("tagged"))
+        .stdout(predicate::str::contains("untagged").not());
+}
+
+// ─── T.4: depends_on with incomplete dep shows BLOCKED ───────────────────────
+
+#[test]
+fn t64_blocked_when_dependency_incomplete() {
+    let dir = TempDir::new().unwrap();
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-upstream.md",
+        "\
+---
+tinySpec: v0
+title: Upstream
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-01-downstream.md",
+        "\
+---
+tinySpec: v0
+title: Downstream
+depends_on:
+  - upstream
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    tinyspec(&dir)
+        .args(["status"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("downstream").and(predicate::str::contains("BLOCKED")));
+}
+
+// ─── T.5: depends_on with completed dep does NOT show BLOCKED ────────────────
+
+#[test]
+fn t65_not_blocked_when_dependency_complete() {
+    let dir = TempDir::new().unwrap();
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-upstream.md",
+        "\
+---
+tinySpec: v0
+title: Upstream
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [x] A: Task
+",
+    );
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-01-downstream.md",
+        "\
+---
+tinySpec: v0
+title: Downstream
+depends_on:
+  - upstream
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    // downstream should NOT show BLOCKED since upstream is completed
+    let output = tinyspec(&dir).args(["status"]).output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // Find the downstream line
+    let downstream_line = stdout.lines().find(|l| l.contains("downstream")).unwrap();
+    assert!(
+        !downstream_line.contains("BLOCKED"),
+        "Should not be blocked when dependency is complete"
+    );
+}
+
+// ─── T.6: lint warns on unknown depends_on ───────────────────────────────────
+
+#[test]
+fn t66_lint_warns_unknown_dependency() {
+    let dir = TempDir::new().unwrap();
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-my-spec.md",
+        "\
+---
+tinySpec: v0
+title: My Spec
+depends_on:
+  - nonexistent-spec
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    tinyspec(&dir)
+        .args(["lint", "my-spec"])
+        .assert()
+        .success() // warnings don't cause failure
+        .stdout(predicate::str::contains(
+            "depends_on references unknown spec 'nonexistent-spec'",
+        ));
+}
+
+// ─── T.7: lint reports circular dependencies ─────────────────────────────────
+
+#[test]
+fn t67_lint_detects_circular_dependencies() {
+    let dir = TempDir::new().unwrap();
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-00-spec-a.md",
+        "\
+---
+tinySpec: v0
+title: Spec A
+depends_on:
+  - spec-b
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    create_sample_spec(
+        &dir,
+        "2025-04-01-10-01-spec-b.md",
+        "\
+---
+tinySpec: v0
+title: Spec B
+depends_on:
+  - spec-a
+---
+
+# Background
+
+b
+
+# Proposal
+
+p
+
+# Implementation Plan
+
+- [ ] A: Task
+",
+    );
+
+    tinyspec(&dir)
+        .args(["lint", "--all"])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("Circular dependency detected"));
+}
+
+// ─── T.8: oneshot executes specs in dependency-respecting order ──────────────
+// (This is a skill-level behavior, not a CLI test — verified by the skill update)

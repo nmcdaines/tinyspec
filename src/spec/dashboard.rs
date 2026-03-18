@@ -12,8 +12,8 @@ use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use ratatui::prelude::*;
 use ratatui::widgets::*;
 
-use super::specs_dir;
 use super::archive::collect_spec_files_with_archived;
+use super::specs_dir;
 use super::summary::{SpecStatus, SpecSummary, load_all_summaries, load_spec_summary};
 
 // ---------------------------------------------------------------------------
@@ -43,9 +43,9 @@ enum Mode {
 
 struct DetailState {
     spec_index: usize,
-    collapsed: HashSet<usize>,       // indices of collapsed impl top-level tasks
+    collapsed: HashSet<usize>, // indices of collapsed impl top-level tasks
     collapsed_tests: HashSet<usize>, // indices of collapsed test top-level tasks
-    selected: usize,                 // index into visible detail rows
+    selected: usize,           // index into visible detail rows
 }
 
 struct App {
@@ -197,7 +197,10 @@ impl App {
                     rows.push(DetailRow::TopLevel { index: i, expanded });
                     if expanded {
                         for j in 0..task.children.len() {
-                            rows.push(DetailRow::SubTask { parent: i, child: j });
+                            rows.push(DetailRow::SubTask {
+                                parent: i,
+                                child: j,
+                            });
                         }
                     }
                 }
@@ -216,7 +219,10 @@ impl App {
                     rows.push(DetailRow::TopLevel { index: i, expanded });
                     if expanded {
                         for j in 0..task.children.len() {
-                            rows.push(DetailRow::SubTask { parent: i, child: j });
+                            rows.push(DetailRow::SubTask {
+                                parent: i,
+                                child: j,
+                            });
                         }
                     }
                 }
@@ -237,7 +243,10 @@ impl App {
                     rows.push(DetailRow::TestTopLevel { index: i, expanded });
                     if expanded {
                         for j in 0..task.children.len() {
-                            rows.push(DetailRow::TestSubTask { parent: i, child: j });
+                            rows.push(DetailRow::TestSubTask {
+                                parent: i,
+                                child: j,
+                            });
                         }
                     }
                 }
@@ -256,7 +265,10 @@ impl App {
                     rows.push(DetailRow::TestTopLevel { index: i, expanded });
                     if expanded {
                         for j in 0..task.children.len() {
-                            rows.push(DetailRow::TestSubTask { parent: i, child: j });
+                            rows.push(DetailRow::TestSubTask {
+                                parent: i,
+                                child: j,
+                            });
                         }
                     }
                 }
@@ -623,10 +635,7 @@ fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_stateful_widget(list, area, &mut list_state);
 }
 
-fn render_task_top_level<'a>(
-    task: &'a super::summary::TaskNode,
-    expanded: bool,
-) -> ListItem<'a> {
+fn render_task_top_level<'a>(task: &'a super::summary::TaskNode, expanded: bool) -> ListItem<'a> {
     let arrow = if task.children.is_empty() {
         " "
     } else if expanded {
@@ -635,7 +644,11 @@ fn render_task_top_level<'a>(
         "▶"
     };
     let check = if task.checked { "✓" } else { "☐" };
-    let check_color = if task.checked { Color::Green } else { Color::default() };
+    let check_color = if task.checked {
+        Color::Green
+    } else {
+        Color::default()
+    };
     let child_progress = if !task.children.is_empty() {
         let done = task.children.iter().filter(|c| c.checked).count();
         format!("  [{}/{}]", done, task.children.len())
@@ -652,7 +665,11 @@ fn render_task_top_level<'a>(
 
 fn render_task_subtask<'a>(task: &'a super::summary::TaskNode) -> ListItem<'a> {
     let check = if task.checked { "✓" } else { "☐" };
-    let check_color = if task.checked { Color::Green } else { Color::default() };
+    let check_color = if task.checked {
+        Color::Green
+    } else {
+        Color::default()
+    };
     ListItem::new(Line::from(vec![
         Span::raw("      "),
         Span::styled(check, Style::default().fg(check_color)),

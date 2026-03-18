@@ -37,8 +37,8 @@ pub fn search(
         }
 
         // Status filter
-        if let Some(status) = status_filter {
-            if let Some(summary) = load_spec_summary(path) {
+        if let Some(status) = status_filter
+            && let Some(summary) = load_spec_summary(path) {
                 let matches = match status {
                     "pending" => summary.status == SpecStatus::Pending,
                     "in-progress" => summary.status == SpecStatus::InProgress,
@@ -53,7 +53,6 @@ pub fn search(
                     continue;
                 }
             }
-        }
 
         let content = match fs::read_to_string(path) {
             Ok(c) => c,

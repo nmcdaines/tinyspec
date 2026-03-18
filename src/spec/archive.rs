@@ -48,9 +48,7 @@ pub fn unarchive_spec(name: &str) -> Result<(), String> {
 
     // Determine destination: mirror the archive sub-path back into .specs/
     let specs_root = specs_dir();
-    let archived_parent = archived_path
-        .parent()
-        .unwrap_or(&archive_root);
+    let archived_parent = archived_path.parent().unwrap_or(&archive_root);
 
     let dest_dir = if archived_parent == archive_root {
         specs_root.clone()
@@ -79,13 +77,12 @@ pub fn archive_all_completed() -> Result<(), String> {
     let mut count = 0;
 
     for path in &files {
-        if let Some(summary) = load_spec_summary(path) {
-            if summary.status == SpecStatus::Completed {
+        if let Some(summary) = load_spec_summary(path)
+            && summary.status == SpecStatus::Completed {
                 let name = summary.name.clone();
                 archive_spec(&name)?;
                 count += 1;
             }
-        }
     }
 
     if count == 0 {
@@ -149,8 +146,8 @@ pub(crate) fn collect_spec_files_with_archived() -> Result<Vec<PathBuf>, String>
     let mut files = collect_spec_files()?;
 
     let archive_root = archive_dir();
-    if archive_root.exists() {
-        if let Ok(entries) = fs::read_dir(&archive_root) {
+    if archive_root.exists()
+        && let Ok(entries) = fs::read_dir(&archive_root) {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.is_dir() {
@@ -167,7 +164,6 @@ pub(crate) fn collect_spec_files_with_archived() -> Result<Vec<PathBuf>, String>
                 }
             }
         }
-    }
 
     Ok(files)
 }
